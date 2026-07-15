@@ -108,41 +108,96 @@ dfs("A")
   }
 ];
 
-function DfsHeroVisual() {
-  const nodes = [
-    { id: "A", x: 310, y: 80, depth: "0" },
-    { id: "B", x: 190, y: 190, depth: "1" },
-    { id: "C", x: 430, y: 190, depth: "5" },
-    { id: "D", x: 100, y: 310, depth: "2" },
-    { id: "E", x: 250, y: 310, depth: "3" },
-    { id: "F", x: 370, y: 310, depth: "4" },
-    { id: "G", x: 520, y: 310, depth: "6" }
-  ];
+const VISUAL_NODES = [
+  { id: "A", x: 350, y: 64, step: 1 },
+  { id: "B", x: 150, y: 150, step: 2 },
+  { id: "C", x: 550, y: 150, step: 6 },
+  { id: "D", x: 48, y: 300, step: 3 },
+  { id: "E", x: 215, y: 318, step: 4 },
+  { id: "F", x: 485, y: 318, step: 5 },
+  { id: "G", x: 652, y: 300, step: 7 }
+] as const;
 
+const VISUAL_EDGES = [
+  ["A", "B"],
+  ["A", "C"],
+  ["B", "D"],
+  ["B", "E"],
+  ["E", "F"],
+  ["F", "C"],
+  ["C", "G"]
+] as const;
+
+const CYCLE_EDGES = new Set(["A-B", "A-C", "B-E", "E-F", "C-F"]);
+
+function visualPosition(id: string) {
+  return VISUAL_NODES.find((node) => node.id === id) ?? VISUAL_NODES[0];
+}
+
+function visualEdgeKey(first: string, second: string) {
+  return [first, second].sort().join("-");
+}
+
+function DfsTopology({ compact = false }: { compact?: boolean }) {
   return (
     <svg
-      aria-labelledby="dfs-hero-title dfs-hero-description"
-      className={styles.heroMap}
+      aria-label="A-B-E-F-C-A 사이클에 D와 G가 연결된 DFS 예제 그래프"
+      className={compact ? styles.howGraph : styles.heroMap}
       role="img"
-      viewBox="0 0 620 460"
+      viewBox="0 0 700 410"
     >
-      <title id="dfs-hero-title">A에서 한 갈래를 끝까지 따라가는 DFS 경로</title>
-      <desc id="dfs-hero-description">A, B, D를 방문한 뒤 B로 되돌아와 E, F, C, G 순서로 깊이 탐색합니다.</desc>
-      <path className={styles.heroEdge} d="M310 80 190 190 100 310M190 190 250 310 370 310 430 190 310 80M430 190 520 310" />
-      <path className={styles.heroRoute} d="M310 80 190 190 100 310 190 190 250 310 370 310 430 190 520 310" />
-      {nodes.map((node) => (
+      <title>트리가 아닌 사이클 그래프</title>
+      <desc>A-B, A-C, B-D, B-E, E-F, F-C, C-G 간선으로 이루어진 무방향 그래프입니다. A-B-E-F-C-A가 하나의 사이클입니다.</desc>
+      {!compact ? (
+        <defs>
+          <marker id="dfs-hero-return-arrow" markerHeight="7" markerWidth="7" orient="auto" refX="6" refY="3.5">
+            <path className={styles.heroArrowHead} d="M0 0 7 3.5 0 7Z" />
+          </marker>
+        </defs>
+      ) : null}
+      {VISUAL_EDGES.map(([first, second]) => {
+        const start = visualPosition(first);
+        const end = visualPosition(second);
+        const isCycle = CYCLE_EDGES.has(visualEdgeKey(first, second));
+        return (
+          <line
+            className={isCycle ? styles.topologyCycleEdge : styles.topologyLeafEdge}
+            key={`${first}-${second}`}
+            x1={start.x}
+            x2={end.x}
+            y1={start.y}
+            y2={end.y}
+          />
+        );
+      })}
+      <g className={styles.cycleStamp} transform="translate(350 210)">
+        <rect height="42" rx="21" width="188" x="-94" y="-21" />
+        <text y="-3">CYCLE</text>
+        <text className={styles.cycleStampPath} y="12">A—B—E—F—C—A</text>
+      </g>
+      {VISUAL_NODES.map((node) => (
         <g className={styles.heroNode} key={node.id} transform={`translate(${node.x} ${node.y})`}>
           <circle r="25" />
           <text>{node.id}</text>
-          <text className={styles.heroDepth} y="44">STEP {node.depth}</text>
+          {!compact ? <text className={styles.heroDepth} y="44">VISIT {node.step}</text> : null}
         </g>
       ))}
-      <g className={styles.heroReturn} transform="translate(145 252)">
-        <path d="M25 8H0l8-8M0 8l8 8" />
-        <text x="34" y="12">RETURN</text>
-      </g>
-      <text className={styles.heroCaption} x="72" y="404">GO DEEP · HIT A DEAD END · RETURN</text>
+      {!compact ? (
+        <>
+          <g className={styles.heroReturn}>
+            <path d="M68 278Q82 210 130 174" markerEnd="url(#dfs-hero-return-arrow)" />
+            <text x="76" y="247">RETURN · D → B</text>
+          </g>
+          <text className={styles.heroCaption} x="350" y="392">GRAPH HAS A CYCLE · VISITED SET PREVENTS REPEAT</text>
+        </>
+      ) : null}
     </svg>
+  );
+}
+
+function DfsHeroVisual() {
+  return (
+    <DfsTopology />
   );
 }
 
@@ -178,34 +233,45 @@ export default function DfsGuidePage() {
         <div className="section-heading">
           <p className="eyebrow">HOW · 어떻게 작동하나요?</p>
           <h2 id="dfs-how">들어간 순서의 반대로 되돌아옵니다</h2>
-          <p>재귀 호출도 직접 만든 배열도 마지막에 들어간 항목을 먼저 꺼내는 LIFO 스택입니다. 저장 위치만 다르고 “깊게 들어간 뒤 되돌아오는” 규칙은 같습니다.</p>
+          <p>이 예제는 트리가 아니라 <code>A—B—E—F—C—A</code> 사이클이 있는 그래프입니다. 재귀 호출과 직접 관리 프레임 모두 방문 집합으로 재방문을 막고, 같은 프레임 규칙으로 깊이와 복귀를 보여 줍니다.</p>
         </div>
 
-        <ol className={styles.howSteps}>
-          <li>
-            <span>01</span>
-            <div><strong>방문 표시</strong><p>노드 A를 방문 집합에 넣습니다. 다시 만난 A는 건너뛰어 사이클을 무한히 돌지 않습니다.</p></div>
-          </li>
-          <li>
-            <span>02</span>
-            <div><strong>한 이웃으로 진입</strong><p>이웃 목록의 첫 노드 B를 고르고 새 프레임을 쌓습니다. B에서도 같은 일을 반복합니다.</p></div>
-          </li>
-          <li>
-            <span>03</span>
-            <div><strong>막다른 곳에서 복귀</strong><p>D에 새 이웃이 없으면 D 프레임을 제거합니다. 이제 스택 맨 위 B의 다음 이웃 E를 확인합니다.</p></div>
-          </li>
-        </ol>
+        <div className={styles.howBoard}>
+          <figure className={styles.howTopology}>
+            <div>
+              <span>ONE FIXED GRAPH</span>
+              <strong>7개 노드 · 7개 간선 · 사이클 1개</strong>
+            </div>
+            <DfsTopology compact />
+            <figcaption>가는 선은 그래프의 관계입니다. DFS가 실제로 새 노드를 발견한 간선만 탐색 트리가 되며, 원래 그래프 자체가 트리로 바뀌는 것은 아닙니다.</figcaption>
+          </figure>
+
+          <ol className={styles.howSteps}>
+            <li>
+              <span>01</span>
+              <div><strong>방문 표시</strong><p>A를 방문 집합에 넣습니다. 사이클을 돌아 A를 다시 만나도 방문 집합 덕분에 즉시 건너뜁니다.</p></div>
+            </li>
+            <li>
+              <span>02</span>
+              <div><strong>한 이웃으로 진입</strong><p>왼쪽 우선이면 A → B → D로 새 프레임을 쌓습니다. 이때 방문 순서는 A, B, D입니다.</p></div>
+            </li>
+            <li>
+              <span>03</span>
+              <div><strong>D에서 B로 복귀</strong><p>D의 유일한 이웃 B는 이미 방문했습니다. D 프레임을 제거하고 B로 돌아와 다음 이웃 E를 봅니다.</p></div>
+            </li>
+          </ol>
+        </div>
 
         <div className={styles.stackComparison}>
           <article>
             <span>RECURSIVE</span>
             <h3>재귀 호출</h3>
-            <p>함수를 호출할 때 런타임이 <code>dfs(A) → dfs(B) → dfs(D)</code> 프레임을 대신 쌓습니다. 코드는 짧지만 깊이가 너무 크면 호출 스택 한도를 넘을 수 있습니다.</p>
+            <p>런타임 호출 스택이 <code>dfs(A) → dfs(B) → dfs(D)</code> 프레임과 각 함수의 다음 이웃 위치를 기억합니다. 코드는 짧지만 깊이가 너무 크면 호출 스택 한도를 넘을 수 있습니다.</p>
           </article>
           <article>
-            <span>ITERATIVE</span>
-            <h3>명시적 스택</h3>
-            <p>코드가 직접 <code>[A, B, D]</code>와 다음 이웃 위치를 관리합니다. 일시 정지나 매우 깊은 탐색을 제어하기 쉽지만 프레임 관리 코드가 더 필요합니다.</p>
+            <span>MANUAL FRAMES</span>
+            <h3>직접 관리 스택</h3>
+            <p>실험실은 배열에 <code>{`{ node, nextNeighbor }`}</code> 프레임을 저장해 재귀와 같은 복귀를 재현합니다. 노드만 미리 쌓는 흔한 반복 DFS와는 상태 구조와 방문 시점이 다릅니다.</p>
           </article>
         </div>
       </section>

@@ -26,12 +26,12 @@ type TraceState = {
 
 const NODE_POSITIONS: Record<NodeId, { x: number; y: number }> = {
   A: { x: 350, y: 64 },
-  B: { x: 205, y: 168 },
-  C: { x: 495, y: 168 },
-  D: { x: 96, y: 318 },
-  E: { x: 260, y: 318 },
-  F: { x: 440, y: 318 },
-  G: { x: 604, y: 318 }
+  B: { x: 150, y: 150 },
+  C: { x: 550, y: 150 },
+  D: { x: 48, y: 300 },
+  E: { x: 215, y: 318 },
+  F: { x: 485, y: 318 },
+  G: { x: 652, y: 300 }
 };
 
 const EDGES: readonly (readonly [NodeId, NodeId])[] = [
@@ -67,8 +67,10 @@ const NEIGHBORS: Record<NeighborOrder, Record<NodeId, NodeId[]>> = {
 
 const MODE_LABELS: Record<DfsMode, string> = {
   recursive: "재귀 호출",
-  explicit: "명시적 스택"
+  explicit: "직접 관리 프레임"
 };
+
+const CYCLE_EDGES = new Set(["A-B", "A-C", "B-E", "E-F", "C-F"]);
 
 const KIND_LABELS: Record<StepKind, string> = {
   ready: "시작 전",
@@ -202,6 +204,24 @@ function edgeKey(first: NodeId, second: NodeId) {
   return [first, second].sort().join("-");
 }
 
+function directedSegment(first: NodeId, second: NodeId) {
+  const start = NODE_POSITIONS[first];
+  const end = NODE_POSITIONS[second];
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  const length = Math.hypot(deltaX, deltaY);
+  const inset = 36;
+  const unitX = deltaX / length;
+  const unitY = deltaY / length;
+
+  return {
+    x1: start.x + unitX * inset,
+    y1: start.y + unitY * inset,
+    x2: end.x - unitX * inset,
+    y2: end.y - unitY * inset
+  };
+}
+
 export function DfsLab() {
   const [mode, setMode] = useState<DfsMode>("recursive");
   const [order, setOrder] = useState<NeighborOrder>("left");
@@ -210,7 +230,6 @@ export function DfsLab() {
   const trace = useMemo(() => makeTrace(mode, order), [mode, order]);
   const state = trace[stepIndex] ?? trace[0];
   const isComplete = stepIndex === trace.length - 1;
-  const activeEdge = state.edge ? edgeKey(...state.edge) : null;
   const visibleStack = [...state.stack].reverse();
 
   useEffect(() => {
@@ -251,8 +270,8 @@ export function DfsLab() {
         <div className={styles.labHeading}>
           <div>
             <p className="eyebrow">TRY · 직접 비교하기</p>
-            <h2 id="dfs-lab-title">스택 맨 위가 바뀌는 순간을 따라가세요</h2>
-            <p>같은 그래프와 시작점 A를 사용합니다. 구현 방식과 이웃 순서를 바꾸고, 한 단계씩 진행하며 현재 노드·방문 순서·스택·다음 행동을 함께 확인하세요.</p>
+            <h2 id="dfs-lab-title">사이클 속에서 깊이와 복귀를 따라가세요</h2>
+            <p>같은 사이클 그래프와 시작점 A를 사용합니다. 화살표 방향, 현재 노드, 방문 집합, 프레임 스택이 한 단계마다 같은 사건을 가리키는지 확인하세요.</p>
           </div>
           <p className={styles.scopeNote}><strong>방문 범위는 항상 A~G, 7개</strong><span>왼쪽 우선과 오른쪽 우선은 “누가 먼저인가”만 바꿉니다.</span></p>
         </div>
@@ -269,7 +288,7 @@ export function DfsLab() {
                   onClick={() => chooseMode(item)}
                   type="button"
                 >
-                  {MODE_LABELS[item]}
+                  {item === "recursive" ? "재귀 호출" : "명시적 스택 · 프레임"}
                 </button>
               ))}
             </div>
@@ -304,6 +323,12 @@ export function DfsLab() {
           </div>
         </div>
 
+        <p className={styles.modeNote}>
+          {mode === "recursive"
+            ? "런타임 호출 스택이 { node, nextNeighbor }에 해당하는 정보를 함수 프레임으로 기억합니다."
+            : "이 모드는 노드 대기 목록이 아니라 { node, nextNeighbor } 프레임을 배열로 직접 관리해 재귀의 복귀를 그대로 재현합니다."}
+        </p>
+
         <div className={styles.progressRow}>
           <span>STEP {String(stepIndex).padStart(2, "0")} / {String(trace.length - 1).padStart(2, "0")}</span>
           <progress aria-label="DFS 탐색 진행률" max={trace.length - 1} value={stepIndex} />
@@ -313,7 +338,7 @@ export function DfsLab() {
         <div className={styles.workspace}>
           <div className={styles.graphPanel}>
             <div className={styles.panelLabel}>
-              <span>FIXED GRAPH</span>
+              <span>UNDIRECTED CYCLIC GRAPH</span>
               <p>선택: {order === "left" ? "왼쪽 이웃부터" : "오른쪽 이웃부터"}</p>
             </div>
             <svg
@@ -323,49 +348,95 @@ export function DfsLab() {
               viewBox="0 0 700 390"
             >
               <title id="dfs-graph-title">DFS 고정 그래프의 현재 탐색 상태</title>
-              <desc id="dfs-graph-description">현재 {state.current ?? "없음"}, 방문 순서 {state.visited.join(", ") || "없음"}, 단계 {KIND_LABELS[state.kind]}</desc>
+              <desc id="dfs-graph-description">
+                A-B-E-F-C-A 사이클이 있는 그래프입니다. 현재 {state.current ?? "없음"}, 방문 순서 {state.visited.join(", ") || "없음"}, 단계 {KIND_LABELS[state.kind]}
+                {state.edge ? `, 화살표 ${state.edge[0]}에서 ${state.edge[1]} 방향` : ""}
+              </desc>
+              <defs>
+                <marker id="dfs-visit-arrow" markerHeight="8" markerWidth="8" orient="auto" refX="7" refY="4">
+                  <path className={styles.visitArrowHead} d="M0 0 8 4 0 8Z" />
+                </marker>
+                <marker id="dfs-return-arrow" markerHeight="8" markerWidth="8" orient="auto" refX="7" refY="4">
+                  <path className={styles.returnArrowHead} d="M0 0 8 4 0 8Z" />
+                </marker>
+                <marker id="dfs-skip-arrow" markerHeight="8" markerWidth="8" orient="auto" refX="7" refY="4">
+                  <path className={styles.skipArrowHead} d="M0 0 8 4 0 8Z" />
+                </marker>
+              </defs>
               {EDGES.map(([first, second]) => {
                 const start = NODE_POSITIONS[first];
                 const end = NODE_POSITIONS[second];
                 const key = edgeKey(first, second);
                 return (
-                  <g key={key}>
-                    <line className={styles.graphEdge} x1={start.x} x2={end.x} y1={start.y} y2={end.y} />
-                    {activeEdge === key ? (
-                      <line
-                        className={`${styles.activeEdge} ${state.kind === "return" ? styles.returnEdge : state.kind === "skip" ? styles.skipEdge : ""}`}
-                        x1={start.x}
-                        x2={end.x}
-                        y1={start.y}
-                        y2={end.y}
-                      />
-                    ) : null}
-                  </g>
+                  <line
+                    className={`${styles.graphEdge} ${CYCLE_EDGES.has(key) ? styles.cycleEdge : styles.leafEdge}`}
+                    key={key}
+                    x1={start.x}
+                    x2={end.x}
+                    y1={start.y}
+                    y2={end.y}
+                  />
                 );
               })}
+              <g className={styles.graphCycleStamp} transform="translate(350 216)">
+                <rect height="42" rx="21" width="188" x="-94" y="-21" />
+                <text y="-3">CYCLE</text>
+                <text y="12">A—B—E—F—C—A</text>
+              </g>
+              {state.edge ? (() => {
+                const segment = directedSegment(...state.edge);
+                const edgeClass = state.kind === "return"
+                  ? styles.returnEdge
+                  : state.kind === "skip"
+                    ? styles.skipEdge
+                    : "";
+                const marker = state.kind === "return"
+                  ? "url(#dfs-return-arrow)"
+                  : state.kind === "skip"
+                    ? "url(#dfs-skip-arrow)"
+                    : "url(#dfs-visit-arrow)";
+                return (
+                  <line
+                    className={`${styles.activeEdge} ${edgeClass}`}
+                    markerEnd={marker}
+                    x1={segment.x1}
+                    x2={segment.x2}
+                    y1={segment.y1}
+                    y2={segment.y2}
+                  />
+                );
+              })() : null}
               {(Object.keys(NODE_POSITIONS) as NodeId[]).map((node) => {
                 const position = NODE_POSITIONS[node];
                 const isVisited = state.visited.includes(node);
                 const isCurrent = state.current === node;
                 const isReturning = state.returningFrom === node && state.kind === "return";
+                const isChecked = state.kind === "skip" && state.edge?.[1] === node;
                 return (
                   <g
-                    className={`${styles.graphNode} ${isVisited ? styles.visitedNode : ""} ${isCurrent ? styles.currentNode : ""} ${isReturning ? styles.returningNode : ""}`}
+                    className={`${styles.graphNode} ${isVisited ? styles.visitedNode : ""} ${isCurrent ? styles.currentNode : ""} ${isReturning ? styles.returningNode : ""} ${isChecked ? styles.checkedNode : ""}`}
                     key={node}
                     transform={`translate(${position.x} ${position.y})`}
                   >
                     <circle r="28" />
                     <text>{node}</text>
-                    {isCurrent ? <text className={styles.nodeStatus} y="48">현재</text> : null}
-                    {isReturning ? <text className={styles.nodeStatus} y="48">복귀</text> : null}
+                    {isCurrent ? <text className={styles.nodeStatus} y="49">{state.kind === "return" ? "돌아온 곳" : "현재"}</text> : null}
+                    {isReturning ? <text className={styles.nodeStatus} y="49">끝</text> : null}
+                    {isChecked ? <text className={styles.nodeStatus} y="49">방문함</text> : null}
                   </g>
                 );
               })}
             </svg>
             <div className={styles.legend} aria-label="그래프 범례">
+              <span><i className={styles.legendCycle} />사이클</span>
               <span><i className={styles.legendCurrent} />현재 노드</span>
               <span><i className={styles.legendVisited} />방문 완료</span>
-              <span><i className={styles.legendReturn} />되돌아오는 간선</span>
+              {state.edge ? (
+                <span>
+                  <i className={state.kind === "return" ? styles.legendReturn : state.kind === "skip" ? styles.legendSkip : styles.legendForward} />
+                  {state.edge[0]} → {state.edge[1]} · {KIND_LABELS[state.kind]}
+                </span>
+              ) : null}
             </div>
           </div>
 
@@ -390,7 +461,7 @@ export function DfsLab() {
 
             <section className={styles.stackPanel}>
               <div className={styles.panelLabel}>
-                <span>{mode === "recursive" ? "CALL STACK" : "EXPLICIT STACK"}</span>
+                <span>{mode === "recursive" ? "CALL STACK" : "MANUAL FRAME STACK"}</span>
                 <p>맨 위부터 표시</p>
               </div>
               {visibleStack.length > 0 ? (
@@ -398,7 +469,7 @@ export function DfsLab() {
                   {visibleStack.map((frame, index) => (
                     <li className={index === 0 ? styles.topFrame : undefined} key={frame.node}>
                       <span>{index === 0 ? "TOP" : String(index + 1).padStart(2, "0")}</span>
-                      <strong>{mode === "recursive" ? `dfs(${frame.node})` : `{ node: "${frame.node}" }`}</strong>
+                      <strong>{mode === "recursive" ? `dfs(${frame.node})` : `{ ${frame.node} · next ${frame.nextNeighbor} }`}</strong>
                       <small>
                         확인 {frame.nextNeighbor} / {NEIGHBORS[order][frame.node].length}
                       </small>

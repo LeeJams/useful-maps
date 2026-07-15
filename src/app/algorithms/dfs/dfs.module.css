@@ -3,27 +3,44 @@
 }
 
 .heroMap {
-  width: min(90%, 650px);
+  width: min(94%, 700px);
   overflow: visible;
 }
 
-.heroEdge,
-.heroRoute {
-  fill: none;
+.topologyCycleEdge,
+.topologyLeafEdge {
   stroke-linecap: round;
-  stroke-linejoin: round;
 }
 
-.heroEdge {
-  stroke: rgba(255, 255, 255, 0.28);
+.heroMap .topologyCycleEdge {
+  stroke: rgba(132, 222, 204, 0.78);
+  stroke-dasharray: 6 7;
+  stroke-width: 3;
+}
+
+.heroMap .topologyLeafEdge {
+  stroke: rgba(255, 255, 255, 0.42);
   stroke-width: 2;
 }
 
-.heroRoute {
-  stroke: #92ead9;
-  stroke-dasharray: 7 10;
-  stroke-width: 3;
-  animation: hero-route 18s linear infinite;
+.cycleStamp rect {
+  fill: rgba(5, 74, 67, 0.86);
+  stroke: rgba(132, 222, 204, 0.7);
+}
+
+.cycleStamp text {
+  fill: #e9fbf7;
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-anchor: middle;
+}
+
+.cycleStamp .cycleStampPath {
+  fill: #9edfd2;
+  font-size: 7px;
+  letter-spacing: 0.05em;
 }
 
 .heroNode circle {
@@ -50,9 +67,14 @@
 .heroReturn path {
   fill: none;
   stroke: #f0c96a;
+  stroke-dasharray: 4 5;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2;
+}
+
+.heroArrowHead {
+  fill: #f0c96a;
 }
 
 .heroReturn text,
@@ -64,6 +86,10 @@
   letter-spacing: 0.13em;
 }
 
+.heroCaption {
+  text-anchor: middle;
+}
+
 .why h2 {
   max-width: 500px;
 }
@@ -73,11 +99,93 @@
   padding-block: 120px;
 }
 
-.howSteps {
+.howBoard {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 0;
   margin: 64px 0 0;
-  border-block: 1px solid var(--line-strong);
+  border: 1px solid var(--line-strong);
+}
+
+.howTopology {
+  min-width: 0;
+  margin: 0;
+  border-right: 1px solid var(--line-strong);
+  padding: 26px;
+}
+
+.howTopology > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.howTopology > div span,
+.howTopology > div strong {
+  font-family: var(--font-code);
+}
+
+.howTopology > div span {
+  color: var(--teal);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+}
+
+.howTopology > div strong {
+  color: var(--ink-soft);
+  font-size: 10px;
+}
+
+.howGraph {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  border-block: 1px solid var(--line);
+  background-color: #f3f6f2;
+  background-image: radial-gradient(#cbd5d1 0.75px, transparent 0.75px);
+  background-size: 18px 18px;
+}
+
+.howGraph .topologyCycleEdge {
+  stroke: var(--teal);
+  stroke-dasharray: 7 7;
+  stroke-width: 3;
+}
+
+.howGraph .topologyLeafEdge {
+  stroke: #aebdb8;
+  stroke-width: 2;
+}
+
+.howGraph .heroNode circle {
+  fill: var(--paper-bright);
+  stroke: var(--teal-deep);
+}
+
+.howGraph .heroNode text {
+  fill: var(--ink);
+}
+
+.howGraph .cycleStamp rect {
+  fill: #e3f1ed;
+  stroke: var(--teal);
+}
+
+.howGraph .cycleStamp text {
+  fill: var(--teal-deep);
+}
+
+.howTopology figcaption {
+  margin-top: 16px;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.howSteps {
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -86,13 +194,13 @@
   display: grid;
   grid-template-columns: 42px 1fr;
   gap: 14px;
-  min-height: 250px;
-  border-right: 1px solid var(--line-strong);
+  min-height: 0;
+  border-bottom: 1px solid var(--line-strong);
   padding: 28px 24px;
 }
 
 .howSteps li:last-child {
-  border-right: 0;
+  border-bottom: 0;
 }
 
 .howSteps li > span,
@@ -109,8 +217,7 @@
 
 .howSteps strong {
   display: block;
-  margin-top: 50px;
-  font-size: 21px;
+  font-size: 18px;
 }
 
 .howSteps p {
@@ -123,15 +230,15 @@
 .stackComparison {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  margin-top: 44px;
+  margin-top: 28px;
   border: 1px solid #2e4741;
   background: #10211e;
   color: #eef7f4;
 }
 
 .stackComparison article {
-  min-height: 260px;
-  padding: 34px;
+  min-height: 220px;
+  padding: 30px;
 }
 
 .stackComparison article + article {
@@ -143,8 +250,8 @@
 }
 
 .stackComparison h3 {
-  margin: 64px 0 0;
-  font-size: 28px;
+  margin: 42px 0 0;
+  font-size: 25px;
   letter-spacing: -0.04em;
 }
 
@@ -221,6 +328,13 @@
   padding-top: 22px;
 }
 
+.modeNote {
+  margin: 14px 0 0;
+  color: #9cb2ac;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .labControls fieldset {
   min-width: 0;
   margin: 0;
@@ -294,7 +408,7 @@
   grid-template-columns: auto 1fr auto;
   gap: 18px;
   align-items: center;
-  margin-top: 22px;
+  margin-top: 14px;
   border: 1px solid #345049;
   border-bottom: 0;
   padding: 13px 16px;
@@ -343,7 +457,7 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.22fr) minmax(360px, 0.78fr);
+  grid-template-columns: minmax(0, 1.16fr) minmax(380px, 0.84fr);
   border: 1px solid #345049;
   background: var(--paper-bright);
   color: var(--ink);
@@ -390,21 +504,60 @@
   stroke-width: 2;
 }
 
+.graphEdge.cycleEdge {
+  stroke: #5aa99a;
+  stroke-dasharray: 7 7;
+  stroke-width: 3;
+}
+
+.graphEdge.leafEdge {
+  stroke: #aebdb8;
+}
+
+.graphCycleStamp rect {
+  fill: #e3f1ed;
+  stroke: var(--teal);
+}
+
+.graphCycleStamp text {
+  fill: var(--teal-deep);
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  text-anchor: middle;
+}
+
+.graphCycleStamp text:last-child {
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
 .activeEdge {
   stroke: var(--teal);
-  stroke-dasharray: 7 7;
-  stroke-width: 5;
+  stroke-width: 4;
   animation: active-edge 700ms ease both;
 }
 
 .activeEdge.returnEdge {
   stroke: #d3912c;
-  stroke-dasharray: 3 6;
 }
 
 .activeEdge.skipEdge {
   stroke: #a77923;
-  stroke-dasharray: 2 7;
+  stroke-dasharray: 3 5;
+}
+
+.visitArrowHead {
+  fill: var(--teal);
+}
+
+.returnArrowHead {
+  fill: #d3912c;
+}
+
+.skipArrowHead {
+  fill: #a77923;
 }
 
 .graphNode circle {
@@ -444,6 +597,12 @@
   stroke-width: 4;
 }
 
+.graphNode.checkedNode circle {
+  stroke: #a77923;
+  stroke-dasharray: 3 3;
+  stroke-width: 4;
+}
+
 .nodeStatus {
   fill: var(--teal-deep);
   font-family: var(--font-code);
@@ -454,6 +613,10 @@
 
 .returningNode .nodeStatus {
   fill: #8a5910;
+}
+
+.checkedNode .nodeStatus {
+  fill: #76500f;
 }
 
 .legend {
@@ -495,6 +658,23 @@
   background: repeating-linear-gradient(90deg, #d3912c 0 3px, transparent 3px 5px);
 }
 
+.legend i.legendCycle {
+  border: 2px dashed var(--teal);
+  background: transparent;
+}
+
+.legend i.legendForward {
+  border: 0;
+  border-radius: 0;
+  background: var(--teal);
+  clip-path: polygon(0 35%, 65% 35%, 65% 0, 100% 50%, 65% 100%, 65% 65%, 0 65%);
+}
+
+.legend i.legendSkip {
+  border: 2px dashed #a77923;
+  background: transparent;
+}
+
 .inspector {
   display: grid;
   align-content: start;
@@ -504,17 +684,17 @@
 .inspector > section {
   min-width: 0;
   border-bottom: 1px solid var(--line);
-  padding: 24px;
+  padding: 20px;
 }
 
 .actionPanel {
-  min-height: 230px;
+  min-height: 190px;
   background: #edf4f1;
 }
 
 .actionPanel h3 {
-  margin: 44px 0 0;
-  font-size: 20px;
+  margin: 27px 0 0;
+  font-size: 19px;
   letter-spacing: -0.025em;
   line-height: 1.45;
 }
@@ -523,7 +703,7 @@
   display: grid;
   grid-template-columns: 76px 1fr;
   gap: 12px;
-  margin: 20px 0 0;
+  margin: 15px 0 0;
   border-top: 1px solid var(--line-strong);
   padding-top: 16px;
   color: var(--ink-soft);
@@ -540,7 +720,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 7px;
-  margin: 20px 0 0;
+  margin: 14px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -550,7 +730,7 @@
   align-items: center;
   gap: 7px;
   min-width: 46px;
-  min-height: 36px;
+  min-height: 32px;
   border: 1px solid var(--line-strong);
   padding: 0 9px;
   font-family: var(--font-code);
@@ -564,7 +744,7 @@
 }
 
 .stackFrames {
-  margin: 18px 0 0;
+  margin: 13px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -575,7 +755,7 @@
   gap: 9px;
   align-items: center;
   border-top: 1px solid var(--line);
-  padding: 10px 0;
+  padding: 8px 0;
 }
 
 .stackFrames li > span,
@@ -712,16 +892,21 @@
   line-height: 1.75;
 }
 
-@keyframes hero-route {
-  to { stroke-dashoffset: -170; }
-}
-
 @keyframes active-edge {
   from { opacity: 0; stroke-dashoffset: 22; }
   to { opacity: 1; stroke-dashoffset: 0; }
 }
 
 @media (max-width: 1040px) {
+  .howBoard {
+    grid-template-columns: 1fr;
+  }
+
+  .howTopology {
+    border-right: 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
   .labControls {
     grid-template-columns: 1fr 1fr;
   }
@@ -764,7 +949,7 @@
 
 @media (max-width: 720px) {
   .heroMap {
-    width: 104%;
+    width: 100%;
   }
 
   .how,
@@ -772,16 +957,24 @@
     padding-block: 82px;
   }
 
-  .howSteps,
   .stackComparison,
   .complexity {
     grid-template-columns: 1fr;
   }
 
+  .howTopology {
+    padding: 18px;
+  }
+
+  .howTopology > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
   .howSteps li {
-    min-height: 210px;
-    border-right: 0;
-    border-bottom: 1px solid var(--line-strong);
+    min-height: 0;
+    padding: 22px 18px;
   }
 
   .howSteps li:last-child {
@@ -789,7 +982,7 @@
   }
 
   .stackComparison article {
-    min-height: 230px;
+    min-height: 200px;
     padding: 26px;
   }
 
