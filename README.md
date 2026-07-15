@@ -24,6 +24,9 @@
 | Git 그래프와 안전한 되돌리기 (`/git/`) | 같은 커밋이 rebase, 기본 merge, `--no-ff`, squash, fast-forward, revert에 따라 어떻게 달라지는지 비교합니다. |
 | Service Worker 요청 경로 (`/service-worker/`) | 실제 Service Worker와 Cache Storage를 사용해 Network First, Cache First, Stale While Revalidate, Network Only를 실험합니다. |
 | Service Worker 활용 사례 (`/service-worker/use-cases/`) | 오프라인 셸, 캐시 전략, 업데이트, 백그라운드 작업 등 실전 활용을 살펴봅니다. |
+| BFS (`/algorithms/bfs/`) | 시작점을 바꾸고 큐, 방문 순서, 거리표를 한 단계씩 움직이며 무가중 그래프의 최단 간선 수를 확인합니다. |
+| DFS (`/algorithms/dfs/`) | 재귀 호출과 명시적 스택, 이웃 순서를 바꾸며 깊이 들어가고 되돌아오는 흐름을 비교합니다. |
+| 백트래킹 (`/algorithms/backtracking/`) | 4×4 N-Queens에서 선택, 충돌 검사, 가지치기, 되돌림, 첫 번째 해를 실제 탐색 순서로 따라갑니다. |
 
 ## 누구나 기여할 수 있습니다
 
@@ -79,6 +82,7 @@
 ```text
 src/
 ├── app/                         # 페이지와 가이드 라우트
+│   └── algorithms/              # BFS, DFS, 백트래킹 알고리즘 가이드
 ├── components/                  # 공통 헤더, 로고, GuideHero, 아이콘
 └── content/guides.ts            # 홈과 내비게이션의 가이드 목록
 
