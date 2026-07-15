@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./backtracking.module.css";
 
 const BOARD_SIZE = 4;
@@ -25,6 +25,21 @@ type TraceEvent = {
   pruned: number;
   row: number;
   solutions: number;
+};
+
+type DecisionStatus = "root" | "candidate" | "explored" | "selected" | "pruned" | "backtracked" | "solution";
+
+type DecisionNode = {
+  col: number | null;
+  depth: number;
+  key: string;
+  parentKey: string | null;
+  status: DecisionStatus;
+};
+
+type PositionedDecisionNode = DecisionNode & {
+  x: number;
+  y: number;
 };
 
 function findConflict(board: number[], row: number, col: number): Conflict | null {
@@ -152,21 +167,125 @@ function createTrace(): TraceEvent[] {
 }
 
 const TRACE = createTrace();
+const TREE_WIDTH = 820;
+
+function boardChoices(board: number[], rowLimit = BOARD_SIZE) {
+  const choices: number[] = [];
+
+  for (let row = 0; row < Math.min(rowLimit, BOARD_SIZE); row += 1) {
+    if (board[row] < 0) break;
+    choices.push(board[row]);
+  }
+
+  return choices;
+}
+
+function choiceKey(choices: number[]) {
+  return choices.length === 0 ? "root" : choices.join("-");
+}
+
+function decisionStatus(event: TraceEvent): DecisionStatus {
+  if (event.kind === "reject") return "pruned";
+  if (event.kind === "backtrack") return "backtracked";
+  if (event.kind === "place") return "explored";
+  return "candidate";
+}
+
+function createDecisionTree(step: number, event: TraceEvent) {
+  const nodes = new Map<string, DecisionNode>([
+    ["root", { col: null, depth: 0, key: "root", parentKey: null, status: "root" }]
+  ]);
+
+  for (const traceEvent of TRACE.slice(0, step + 1)) {
+    if (traceEvent.col === null || traceEvent.row >= BOARD_SIZE) continue;
+
+    const parentChoices = boardChoices(traceEvent.board, traceEvent.row);
+    const choices = [...parentChoices, traceEvent.col];
+    const key = choiceKey(choices);
+
+    nodes.set(key, {
+      col: traceEvent.col,
+      depth: choices.length,
+      key,
+      parentKey: choiceKey(parentChoices),
+      status: decisionStatus(traceEvent)
+    });
+  }
+
+  const activeChoices = boardChoices(event.board);
+
+  for (let depth = 1; depth <= activeChoices.length; depth += 1) {
+    const key = choiceKey(activeChoices.slice(0, depth));
+    const node = nodes.get(key);
+    if (node) nodes.set(key, { ...node, status: "selected" });
+  }
+
+  if (event.kind === "solution") {
+    const solutionKey = choiceKey(activeChoices);
+    const solutionNode = nodes.get(solutionKey);
+    if (solutionNode) nodes.set(solutionKey, { ...solutionNode, status: "solution" });
+  }
+
+  const currentChoices = event.col === null
+    ? activeChoices
+    : [...boardChoices(event.board, event.row), event.col];
+  const currentKey = choiceKey(currentChoices);
+  const children = new Map<string, DecisionNode[]>();
+
+  for (const node of nodes.values()) {
+    if (node.parentKey === null) continue;
+    const siblings = children.get(node.parentKey) ?? [];
+    siblings.push(node);
+    siblings.sort((left, right) => (left.col ?? -1) - (right.col ?? -1));
+    children.set(node.parentKey, siblings);
+  }
+
+  const rawPositions = new Map<string, number>();
+  let leafCount = 0;
+
+  function positionNode(key: string): number {
+    const childNodes = children.get(key) ?? [];
+
+    if (childNodes.length === 0) {
+      const position = leafCount;
+      leafCount += 1;
+      rawPositions.set(key, position);
+      return position;
+    }
+
+    const childPositions = childNodes.map((child) => positionNode(child.key));
+    const position = childPositions.reduce((total, childPosition) => total + childPosition, 0) / childPositions.length;
+    rawPositions.set(key, position);
+    return position;
+  }
+
+  positionNode("root");
+  const left = 118;
+  const right = 792;
+  const positionedNodes: PositionedDecisionNode[] = [...nodes.values()].map((node) => {
+    const rawPosition = rawPositions.get(node.key) ?? 0;
+    const x = leafCount <= 1 ? (left + right) / 2 : left + (rawPosition / (leafCount - 1)) * (right - left);
+    return { ...node, x, y: 28 + node.depth * 48 };
+  });
+
+  return {
+    currentKey,
+    currentX: positionedNodes.find((node) => node.key === currentKey)?.x ?? TREE_WIDTH / 2,
+    nodes: positionedNodes
+  };
+}
 
 function locationLabel(row: number, col: number | null) {
   return col === null ? "탐색 완료" : `${row + 1}행 ${col + 1}열`;
 }
 
-function eventShortLabel(event: TraceEvent) {
-  const location = event.col === null ? "" : ` · R${event.row + 1} C${event.col + 1}`;
-  return `${event.phase}${location}`;
-}
-
 export function BacktrackingLab() {
   const [step, setStep] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const treeViewportRef = useRef<HTMLDivElement>(null);
   const event = TRACE[step];
   const isComplete = step === TRACE.length - 1;
+  const decisionTree = useMemo(() => createDecisionTree(step, event), [event, step]);
 
   useEffect(() => {
     if (!isRunning || isComplete) return;
@@ -180,6 +299,21 @@ export function BacktrackingLab() {
     return () => window.clearTimeout(timer);
   }, [isComplete, isRunning, step]);
 
+  useEffect(() => {
+    const viewportElement = treeViewportRef.current;
+    if (!viewportElement) return;
+
+    const centerCurrentNode = () => {
+      if (viewportElement.scrollWidth <= viewportElement.clientWidth) return;
+      const scaledX = decisionTree.currentX * (viewportElement.scrollWidth / TREE_WIDTH);
+      viewportElement.scrollTo({ left: Math.max(0, scaledX - viewportElement.clientWidth / 2), behavior: "auto" });
+    };
+
+    centerCurrentNode();
+    window.addEventListener("resize", centerCurrentNode);
+    return () => window.removeEventListener("resize", centerCurrentNode);
+  }, [decisionTree.currentX]);
+
   const boardDescription = useMemo(() => {
     const queens = event.board
       .map((col, row) => col >= 0 ? `${row + 1}행 ${col + 1}열` : null)
@@ -189,8 +323,6 @@ export function BacktrackingLab() {
     return `${queenCopy} ${candidateCopy}`;
   }, [event]);
 
-  const visibleTrace = TRACE.slice(Math.max(0, step - 5), step + 1);
-  const visibleTraceStart = Math.max(0, step - 5);
   const path = event.board
     .map((col, row) => col >= 0 ? `R${row + 1}→C${col + 1}` : null)
     .filter((choice): choice is string => choice !== null);
@@ -234,6 +366,60 @@ export function BacktrackingLab() {
         </div>
 
         <div className={styles.workspace}>
+          <div className={styles.treePanel}>
+            <div className={styles.treeTopline}>
+              <span>EXPLORED DECISION TREE</span>
+              <strong>{path.length > 0 ? path.join("  /  ") : "ROOT · 아직 선택 없음"}</strong>
+            </div>
+            <div className={styles.treeViewport} ref={treeViewportRef}>
+              <svg
+                className={styles.decisionTree}
+                viewBox={`0 0 ${TREE_WIDTH} 252`}
+                role="img"
+                aria-label={`현재까지 실제로 검사한 결정 트리입니다. ${path.length > 0 ? `현재 선택 경로는 ${path.join(", ")}입니다.` : "아직 선택한 열이 없습니다."} 현재 단계는 ${event.phase}입니다.`}
+              >
+                <g className={styles.treeLevels} aria-hidden="true">
+                  {[0, 1, 2, 3, 4].map((depth) => (
+                    <g key={depth}>
+                      <path d={`M100 ${28 + depth * 48}H808`} />
+                      <text x="10" y={31 + depth * 48}>{depth === 0 ? "ROOT" : `ROW ${depth}`}</text>
+                    </g>
+                  ))}
+                </g>
+                <g className={styles.treeEdges} aria-hidden="true">
+                  {decisionTree.nodes.map((node) => {
+                    if (node.parentKey === null) return null;
+                    const parent = decisionTree.nodes.find((candidate) => candidate.key === node.parentKey);
+                    if (!parent) return null;
+                    return <path className={styles[`treeEdge_${node.status}`]} d={`M${parent.x} ${parent.y}L${node.x} ${node.y}`} key={`${node.key}-edge`} />;
+                  })}
+                </g>
+                <g className={styles.treeNodes}>
+                  {decisionTree.nodes.map((node) => (
+                    <g
+                      className={styles[`treeNode_${node.status}`]}
+                      data-current={node.key === decisionTree.currentKey ? "true" : undefined}
+                      key={node.key}
+                      transform={`translate(${node.x} ${node.y})`}
+                    >
+                      <circle r={node.status === "root" ? 13 : 11} />
+                      <text>{node.status === "root" ? "∅" : `C${(node.col ?? 0) + 1}`}</text>
+                      {node.status === "pruned" && <text className={styles.treeNodeState} x="10" y="-10">×</text>}
+                      {node.status === "backtracked" && <text className={styles.treeNodeState} x="11" y="-9">↶</text>}
+                      {node.status === "solution" && <text className={styles.treeNodeState} x="11" y="-9">✓</text>}
+                    </g>
+                  ))}
+                </g>
+              </svg>
+            </div>
+            <div className={styles.treeLegend} aria-label="결정 트리 범례">
+              <span><i className={styles.legendCandidate} />검사 중</span>
+              <span><i className={styles.legendQueen} />현재 경로</span>
+              <span><i className={styles.legendRejected} />잘린 후보</span>
+              <span><i className={styles.legendReturned} />되돌린 선택</span>
+            </div>
+          </div>
+
           <div className={styles.boardPanel}>
             <div className={styles.boardTopline}>
               <span>BOARD / STATE {String(step).padStart(2, "0")}</span>
@@ -311,25 +497,6 @@ export function BacktrackingLab() {
               )}
             </div>
 
-            <div className={styles.pathBlock}>
-              <span>선택 경로</span>
-              <p>{path.length > 0 ? path.join("  /  ") : "아직 선택한 열이 없습니다."}</p>
-            </div>
-
-            <div className={styles.timeline}>
-              <span>최근 탐색 기록</span>
-              <ol start={visibleTraceStart + 1}>
-                {visibleTrace.map((traceEvent, index) => {
-                  const traceIndex = visibleTraceStart + index;
-                  return (
-                    <li className={traceIndex === step ? styles.activeTrace : undefined} key={traceIndex}>
-                      <span>{String(traceIndex).padStart(2, "0")}</span>
-                      <p>{eventShortLabel(traceEvent)}</p>
-                    </li>
-                  );
-                })}
-              </ol>
-            </div>
           </aside>
         </div>
       </div>

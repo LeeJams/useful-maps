@@ -33,6 +33,12 @@
   animation: tracePath 1.8s linear infinite;
 }
 
+.heroTree .heroBacktrackedPath {
+  stroke: #ffd08a;
+  stroke-dasharray: 3 6;
+  stroke-width: 2;
+}
+
 .heroTree circle {
   fill: #075e56;
   stroke: rgba(255, 255, 255, 0.62);
@@ -48,6 +54,8 @@
   dominant-baseline: central;
 }
 
+.heroTree .heroRootNode text { font-size: 7px; }
+
 .heroTree .heroSelectedNode circle {
   fill: #d9efea;
   stroke: #d9efea;
@@ -56,16 +64,21 @@
 .heroTree .heroSelectedNode text { fill: #075e56; }
 
 .heroTree .heroPrunedNode circle {
-  fill: rgba(195, 72, 90, 0.24);
+  fill: #5d2630;
   stroke: #ffb4c0;
 }
 
 .heroTree .heroPrunedNode text {
   fill: #ffd9df;
-  font-size: 18px;
+  font-size: 8px;
 }
 
-.heroTree .heroMutedNode { opacity: 0.52; }
+.heroTree .heroBacktrackedNode circle {
+  fill: #59471f;
+  stroke: #ffd08a;
+}
+
+.heroTree .heroBacktrackedNode text { fill: #ffe0ac; }
 
 .heroTree .heroSolutionNode circle {
   fill: #fff4cb;
@@ -74,31 +87,35 @@
 
 .heroTree .heroSolutionNode text {
   fill: #72500c;
-  font-size: 15px;
-}
-
-.heroBoard rect,
-.heroBoard path {
-  fill: rgba(255, 255, 255, 0.05);
-  stroke: rgba(255, 255, 255, 0.35);
-  stroke-width: 1;
-}
-
-.heroBoard path { fill: none; }
-
-.heroQueen circle {
-  fill: #d9efea;
-  stroke: white;
-  stroke-width: 1.5;
-}
-
-.heroQueen text {
-  fill: #075e56;
-  font-family: var(--font-code);
   font-size: 9px;
-  font-weight: 900;
+}
+
+.heroTree .heroNodeState {
+  fill: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+}
+
+.heroTree .heroSelectedNode .heroChoiceLabel,
+.heroTree .heroBacktrackedNode .heroChoiceLabel,
+.heroTree .heroSolutionNode .heroChoiceLabel {
+  fill: rgba(255, 255, 255, 0.9);
+  font-size: 7px;
+  letter-spacing: 0.04em;
+}
+
+.heroDepthLabels text,
+.heroSolutionLabel {
+  fill: rgba(255, 255, 255, 0.62);
+  font-family: var(--font-code);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.heroSolutionLabel {
+  fill: #fff4cb;
+  font-size: 11px;
   text-anchor: middle;
-  dominant-baseline: central;
 }
 
 .heroReturn {
@@ -282,7 +299,7 @@
 .labInner {
   width: min(1260px, calc(100% - 48px));
   margin-inline: auto;
-  padding-block: 96px 110px;
+  padding-block: 72px 80px;
 }
 
 .labHeader {
@@ -352,7 +369,7 @@
 
 .progress {
   height: 3px;
-  margin-top: 42px;
+  margin-top: 32px;
   overflow: hidden;
   background: #2a403b;
 }
@@ -370,9 +387,141 @@
   border-bottom: 1px solid #38514b;
 }
 
+.treePanel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border-bottom: 1px solid #38514b;
+  padding: 25px 0 26px;
+}
+
+.treeTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  color: #789089;
+  font-family: var(--font-code);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.treeTopline strong {
+  color: #d9efea;
+  font-size: 10px;
+  text-align: right;
+}
+
+.treeViewport {
+  width: 100%;
+  margin-top: 12px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: #527069 #172d29;
+}
+
+.decisionTree {
+  display: block;
+  width: min(100%, 900px);
+  min-width: 720px;
+  height: auto;
+  margin-inline: auto;
+}
+
+.treeLevels path {
+  fill: none;
+  stroke: #243d37;
+  stroke-width: 1;
+}
+
+.treeLevels text {
+  fill: #789089;
+  font-family: var(--font-code);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.treeEdges path {
+  fill: none;
+  stroke: #527069;
+  stroke-width: 1.25;
+}
+
+.treeEdges .treeEdge_selected,
+.treeEdges .treeEdge_solution {
+  stroke: #8ce3d3;
+  stroke-width: 2.5;
+}
+
+.treeEdges .treeEdge_pruned {
+  stroke: #c3485a;
+  stroke-dasharray: 2 3;
+}
+
+.treeEdges .treeEdge_backtracked {
+  stroke: #c39537;
+  stroke-dasharray: 3 4;
+}
+
+.treeNodes circle {
+  fill: #17312c;
+  stroke: #789089;
+  stroke-width: 1.5;
+}
+
+.treeNodes text {
+  fill: #d9e9e4;
+  font-family: var(--font-code);
+  font-size: 7px;
+  font-weight: 850;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.treeNodes .treeNode_root circle { fill: #10211e; }
+.treeNodes .treeNode_root text { fill: #a9beb8; font-size: 10px; }
+.treeNodes .treeNode_candidate circle { fill: #5e4608; stroke: #f7d781; }
+.treeNodes .treeNode_selected circle { fill: #8ce3d3; stroke: #d9efea; }
+.treeNodes .treeNode_selected text { fill: #0d2924; }
+.treeNodes .treeNode_pruned circle { fill: #5d2630; stroke: #ffb4c0; }
+.treeNodes .treeNode_backtracked circle { fill: #59471f; stroke: #ffe0ac; }
+.treeNodes .treeNode_solution circle { fill: #fff4cb; stroke: white; }
+.treeNodes .treeNode_solution text { fill: #72500c; }
+
+.treeNodes .treeNodeState {
+  fill: white;
+  font-size: 8px;
+  paint-order: stroke;
+  stroke: #10211e;
+  stroke-width: 3px;
+}
+
+.treeLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 8px 0 0 100px;
+  color: #9bb0aa;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.treeLegend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.treeLegend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
 .boardPanel {
   min-width: 0;
-  padding: 32px 44px 44px 0;
+  padding: 28px 44px 34px 0;
 }
 
 .boardTopline {
@@ -395,7 +544,7 @@
 
 .boardFrame {
   display: grid;
-  grid-template-columns: 30px minmax(0, 520px);
+  grid-template-columns: 30px minmax(0, 400px);
   grid-template-rows: 26px auto;
   justify-content: center;
   width: 100%;
@@ -426,6 +575,8 @@
 .board {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid #789089;
   background: #dfeae5;
@@ -435,7 +586,6 @@
   position: relative;
   display: grid;
   place-items: center;
-  aspect-ratio: 1;
   background: #e9eee9;
   color: #17372f;
   font-size: clamp(30px, 5vw, 58px);
@@ -519,9 +669,7 @@
 }
 
 .currentAction > span,
-.constraint > span,
-.pathBlock > span,
-.timeline > span {
+.constraint > span {
   color: #79d9c7;
   font-family: var(--font-code);
   font-size: 9px;
@@ -530,7 +678,7 @@
 }
 
 .currentAction h3 {
-  min-height: 82px;
+  min-height: 72px;
   margin: 17px 0 0;
   font-size: 21px;
   letter-spacing: -0.035em;
@@ -580,11 +728,7 @@
   font-weight: 800;
 }
 
-.constraint,
-.pathBlock,
-.timeline {
-  padding-top: 25px;
-}
+.constraint { padding-top: 25px; }
 
 .constraint p {
   display: grid;
@@ -599,48 +743,6 @@
 
 .constraint p strong { color: #d9efea; }
 .constraint .conflictText strong { color: #ffb4c0; }
-
-.pathBlock p {
-  min-height: 42px;
-  margin: 12px 0 0;
-  color: #e4efe9;
-  font-family: var(--font-code);
-  font-size: 11px;
-  line-height: 1.7;
-}
-
-.timeline ol {
-  margin: 12px 0 0;
-  padding: 0;
-  border-top: 1px solid #38514b;
-  list-style: none;
-}
-
-.timeline li {
-  display: grid;
-  grid-template-columns: 34px 1fr;
-  align-items: center;
-  min-height: 35px;
-  border-bottom: 1px solid #293f3a;
-  color: #718780;
-}
-
-.timeline li > span {
-  font-family: var(--font-code);
-  font-size: 9px;
-}
-
-.timeline li p {
-  margin: 0;
-  font-size: 10px;
-}
-
-.timeline .activeTrace {
-  color: #f4fbf8;
-  font-weight: 800;
-}
-
-.timeline .activeTrace > span { color: #f7d781; }
 
 .apply { padding-bottom: 150px; }
 
@@ -742,6 +844,7 @@
   .process li:nth-child(3) { border-left: 0; border-top: 1px solid var(--line-strong); }
   .process li:nth-child(4) { border-top: 1px solid var(--line-strong); }
   .workspace { grid-template-columns: 1fr; }
+  .treePanel { grid-column: 1; }
   .boardPanel { padding-right: 0; }
   .inspector { border-top: 1px solid #38514b; border-left: 0; padding-left: 0; }
   .labHeader { align-items: flex-start; flex-direction: column; }
@@ -765,11 +868,17 @@
   .process li + li { border-top: 1px solid var(--line-strong); border-left: 0; }
   .process h3 { margin-top: 60px; }
   .howRule { grid-template-columns: 1fr; gap: 16px; }
-  .labInner { width: min(100% - 28px, 1260px); padding-block: 78px 88px; }
+  .labInner { width: min(100% - 28px, 1260px); padding-block: 64px 72px; }
   .labHeader h2 { font-size: 44px; }
   .controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
   .controls button { padding-inline: 10px; }
   .controls button:last-child { grid-column: 1 / -1; }
+  .treePanel { padding-block: 22px; }
+  .treeTopline { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .treeTopline strong { max-width: 100%; text-align: left; white-space: nowrap; }
+  .treeViewport { margin-top: 8px; }
+  .decisionTree { width: 720px; }
+  .treeLegend { margin-left: 0; gap: 10px 14px; }
   .boardPanel { padding-block: 26px 32px; }
   .boardFrame { grid-template-columns: 24px minmax(0, 1fr); }
   .cell { font-size: clamp(28px, 13vw, 48px); }

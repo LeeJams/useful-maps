@@ -20,43 +20,48 @@ function BacktrackingHeroVisual() {
       role="img"
       aria-labelledby="backtracking-hero-title backtracking-hero-description"
     >
-      <title id="backtracking-hero-title">선택한 가지와 잘라 낸 가지가 표시된 N-Queens 탐색 지도</title>
-      <desc id="backtracking-hero-description">첫 번째 행에서 열을 선택하고 다음 행으로 내려가며, 충돌하는 후보를 잘라 낸 뒤 이전 선택으로 되돌아오는 과정을 보여 줍니다.</desc>
+      <title id="backtracking-hero-title">4×4 N-Queens의 행별 결정 트리</title>
+      <desc id="backtracking-hero-description">시작점 아래의 각 깊이가 한 행을 뜻합니다. 첫 번째 행 1열의 실패한 가지를 되돌린 뒤, 1행 2열, 2행 4열, 3행 1열, 4행 3열을 선택해 첫 해를 찾습니다.</desc>
 
       <text className={styles.heroLabel} x="58" y="74">SEARCH TREE / 4×4</text>
       <path className={styles.heroAxis} d="M58 94H582" />
 
       <g className={styles.heroTree}>
-        <path d="M320 142 178 246M320 142l142 104M178 246l-76 116M178 246l82 116M462 246l-80 116M462 246l76 116" />
-        <path className={styles.heroSelectedPath} d="M320 142 178 246l82 116 78 110" />
-        <g transform="translate(320 142)"><circle r="18" /><text>R1</text></g>
-        <g className={styles.heroSelectedNode} transform="translate(178 246)"><circle r="18" /><text>C2</text></g>
-        <g className={styles.heroPrunedNode} transform="translate(102 362)"><circle r="18" /><text>×</text></g>
-        <g className={styles.heroSelectedNode} transform="translate(260 362)"><circle r="18" /><text>C4</text></g>
-        <g className={styles.heroMutedNode} transform="translate(462 246)"><circle r="18" /><text>C3</text></g>
-        <g className={styles.heroPrunedNode} transform="translate(382 362)"><circle r="18" /><text>×</text></g>
-        <g className={styles.heroMutedNode} transform="translate(538 362)"><circle r="18" /><text>…</text></g>
-        <g className={styles.heroSolutionNode} transform="translate(338 472)"><circle r="22" /><text>✓</text></g>
+        <path d="M320 132 150 205M320 132l120 73M150 205l-42 88M150 205l76 88M440 205l-84 88M440 205l-30 88M440 205l28 88M440 205l82 88M522 293l-36 88M486 381l-48 88M486 381v88M486 381l48 88" />
+        <path className={styles.heroBacktrackedPath} d="M320 132 150 205M150 205l-42 88M150 205l76 88" />
+        <path className={styles.heroSelectedPath} d="M320 132 440 205l82 88-36 88 48 88" />
+
+        <g className={styles.heroRootNode} transform="translate(320 132)"><circle r="18" /><text>START</text></g>
+
+        <g className={styles.heroBacktrackedNode} transform="translate(150 205)"><circle r="18" /><text>C1</text><text className={styles.heroChoiceLabel} y="34">R1 · C1 ↶</text></g>
+        <g className={styles.heroSelectedNode} transform="translate(440 205)"><circle r="18" /><text>C2</text><text className={styles.heroChoiceLabel} y="34">R1 · C2</text></g>
+
+        <g className={styles.heroBacktrackedNode} transform="translate(108 293)"><circle r="16" /><text>C3</text><text className={styles.heroNodeState} y="30">↶</text></g>
+        <g className={styles.heroBacktrackedNode} transform="translate(226 293)"><circle r="16" /><text>C4</text><text className={styles.heroNodeState} y="30">↶</text></g>
+        <g className={styles.heroPrunedNode} transform="translate(356 293)"><circle r="15" /><text>C1</text><text className={styles.heroNodeState} y="28">×</text></g>
+        <g className={styles.heroPrunedNode} transform="translate(410 293)"><circle r="15" /><text>C2</text><text className={styles.heroNodeState} y="28">×</text></g>
+        <g className={styles.heroPrunedNode} transform="translate(468 293)"><circle r="15" /><text>C3</text><text className={styles.heroNodeState} y="28">×</text></g>
+        <g className={styles.heroSelectedNode} transform="translate(522 293)"><circle r="18" /><text>C4</text><text className={styles.heroChoiceLabel} y="34">R2 · C4</text></g>
+
+        <g className={styles.heroSelectedNode} transform="translate(486 381)"><circle r="18" /><text>C1</text><text className={styles.heroChoiceLabel} y="34">R3 · C1</text></g>
+
+        <g className={styles.heroPrunedNode} transform="translate(438 469)"><circle r="15" /><text>C1</text><text className={styles.heroNodeState} y="28">×</text></g>
+        <g className={styles.heroPrunedNode} transform="translate(486 469)"><circle r="15" /><text>C2</text><text className={styles.heroNodeState} y="28">×</text></g>
+        <g className={styles.heroSolutionNode} transform="translate(534 469)"><circle r="20" /><text>C3</text><text className={styles.heroChoiceLabel} y="36">R4 · C3 ✓</text></g>
       </g>
 
-      <g className={styles.heroBoard} transform="translate(418 430)">
-        <rect width="144" height="144" />
-        {[36, 72, 108].map((position) => (
-          <g key={position}>
-            <path d={`M${position} 0v144`} />
-            <path d={`M0 ${position}h144`} />
-          </g>
-        ))}
-        {[[54, 18], [126, 54], [18, 90], [90, 126]].map(([x, y], index) => (
-          <g className={styles.heroQueen} key={`${x}-${y}`} transform={`translate(${x} ${y})`}>
-            <circle r="12" />
-            <text>{index + 1}</text>
-          </g>
-        ))}
+      <g className={styles.heroDepthLabels}>
+        <text x="58" y="136">ROOT</text>
+        <text x="58" y="209">ROW 1</text>
+        <text x="58" y="297">ROW 2</text>
+        <text x="58" y="385">ROW 3</text>
+        <text x="58" y="473">ROW 4</text>
       </g>
-      <path className={styles.heroReturn} d="M331 499c-30 54-89 60-120 21" />
-      <text className={styles.heroReturnLabel} x="150" y="530">BACKTRACK</text>
-      <text className={styles.heroFootnote} x="58" y="594">CHOOSE → CHECK → DESCEND → UNDO</text>
+
+      <path className={styles.heroReturn} d="M226 323c-4 42-68 46-76 4" />
+      <text className={styles.heroReturnLabel} x="92" y="354">BACKTRACK</text>
+      <text className={styles.heroSolutionLabel} x="320" y="548">FIRST SOLUTION · [2, 4, 1, 3]</text>
+      <text className={styles.heroFootnote} x="58" y="594">DEPTH = ROW · NODE = CHOSEN COLUMN</text>
     </svg>
   );
 }
