@@ -27,6 +27,51 @@ function MiniWorkerMap() {
   );
 }
 
+function MiniAlgorithmMap({ variant }: { variant: "bfs" | "dfs" | "backtracking" }) {
+  const isBacktracking = variant === "backtracking";
+  const activeNodes = variant === "bfs" ? [0, 1, 2, 3] : variant === "dfs" ? [0, 1, 3] : [0, 2, 4];
+  const nodes = isBacktracking
+    ? [[190, 32], [122, 84], [258, 84], [84, 142], [160, 142], [220, 142], [296, 142]]
+    : [[66, 84], [150, 38], [150, 130], [250, 38], [250, 130], [326, 84]];
+
+  return (
+    <svg
+      className={`mini-map mini-algorithm-map mini-${variant}`}
+      viewBox="0 0 380 170"
+      role="img"
+      aria-label={
+        variant === "bfs"
+          ? "시작점에서 가까운 층부터 퍼지는 BFS 그래프"
+          : variant === "dfs"
+            ? "한 갈래를 끝까지 따라가는 DFS 그래프"
+            : "불가능한 가지를 되돌아가는 백트래킹 선택 트리"
+      }
+    >
+      {isBacktracking ? (
+        <>
+          <path d="M190 32 122 84M190 32l68 52M122 84l-38 58M122 84l38 58M258 84l-38 58M258 84l38 58" />
+          <path className="accent-line" d="M190 32 122 84l38 58" />
+        </>
+      ) : (
+        <>
+          <path d="M66 84 150 38M66 84l84 46M150 38h100M150 38l100 92M150 130h100M250 38l76 46M250 130l76-46" />
+          <path className="accent-line" d={variant === "bfs" ? "M66 84 150 38M66 84l84 46" : "M66 84 150 38h100l76 46"} />
+        </>
+      )}
+      {nodes.map(([cx, cy], index) => (
+        <circle className={activeNodes.includes(index) ? "accent-node" : undefined} key={`${cx}-${cy}`} cx={cx} cy={cy} r="9" />
+      ))}
+      {isBacktracking && <path className="pruned-mark" d="m251 77 14 14m0-14-14 14" />}
+    </svg>
+  );
+}
+
+function GuidePreview({ preview }: { preview: (typeof guides)[number]["preview"] }) {
+  if (preview === "git") return <MiniGitMap />;
+  if (preview === "worker") return <MiniWorkerMap />;
+  return <MiniAlgorithmMap variant={preview} />;
+}
+
 export default function Home() {
   return (
     <main>
@@ -57,7 +102,7 @@ export default function Home() {
       </section>
 
       <section className="library-intro page-wrap" id="guides">
-        <p className="section-index">INDEX / 02 GUIDES</p>
+        <p className="section-index">INDEX / {String(guides.length).padStart(2, "0")} GUIDES</p>
         <div>
           <h2>외우기 전에,<br />구조부터 보세요.</h2>
           <p>
@@ -80,7 +125,7 @@ export default function Home() {
               </ul>
             </div>
             <div className="guide-preview">
-              {guide.slug === "git" ? <MiniGitMap /> : <MiniWorkerMap />}
+              <GuidePreview preview={guide.preview} />
             </div>
             <ArrowUpRightIcon className="guide-arrow" />
           </Link>
