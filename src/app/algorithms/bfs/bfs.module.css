@@ -3,36 +3,56 @@
 }
 
 .heroMap {
-  width: min(92%, 660px);
+  --graph-guide: rgba(255, 255, 255, 0.2);
+  --graph-label: rgba(255, 255, 255, 0.72);
+  --graph-edge: rgba(133, 239, 218, 0.62);
+  --graph-node-fill: #d9efea;
+  --graph-node-stroke: white;
+  --graph-node-text: #075e56;
+  width: min(94%, 700px);
   overflow: visible;
 }
 
-.heroRings circle {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.18);
+.howGraph {
+  --graph-guide: rgba(8, 125, 112, 0.19);
+  --graph-label: var(--quiet);
+  --graph-edge: #9bb4ad;
+  --graph-node-fill: var(--paper-bright);
+  --graph-node-stroke: #88a39b;
+  --graph-node-text: var(--ink);
+  display: block;
+  width: 100%;
+}
+
+.layerGuides line {
+  stroke: var(--graph-guide);
   stroke-width: 1;
-  stroke-dasharray: 5 9;
+  stroke-dasharray: 4 8;
 }
 
-.heroEdges path {
-  fill: none;
-  stroke: rgba(133, 239, 218, 0.56);
+.layerGuides text {
+  fill: var(--graph-label);
+  font-family: var(--font-code);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-anchor: middle;
+}
+
+.staticEdges line {
+  stroke: var(--graph-edge);
   stroke-width: 2;
 }
 
-.heroNode circle {
-  fill: #d9efea;
-  stroke: white;
+.staticNodes circle {
+  fill: var(--graph-node-fill);
+  stroke: var(--graph-node-stroke);
   stroke-width: 2;
 }
 
-.heroStart circle {
-  fill: #f2b84b;
-}
-
-.heroNode text,
-.heroQueue text {
-  fill: #075e56;
+.staticNodes text,
+.heroQueue g > text {
+  fill: var(--graph-node-text);
   font-family: var(--font-code);
   font-size: 13px;
   font-weight: 850;
@@ -40,23 +60,27 @@
   dominant-baseline: central;
 }
 
-.heroLabels text,
+.staticStart circle {
+  fill: #f2b84b;
+  stroke: white;
+}
+
+.staticMerge circle {
+  stroke: #42baa5;
+  stroke-width: 4;
+}
+
+.heroQueue > path {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-width: 1;
+}
+
 .heroQueue > text {
   fill: rgba(255, 255, 255, 0.72);
   font-family: var(--font-code);
   font-size: 10px;
-  font-weight: 750;
+  font-weight: 800;
   letter-spacing: 0.08em;
-}
-
-.heroQueue > text {
-  text-anchor: start;
-}
-
-.heroQueueLine {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.28);
-  stroke-width: 1;
 }
 
 .heroQueue rect {
@@ -64,10 +88,9 @@
   stroke: rgba(255, 255, 255, 0.46);
 }
 
-.heroQueue path {
-  fill: none;
-  stroke: #f2b84b;
-  stroke-width: 2;
+.heroQueue .queueFront {
+  fill: #f2b84b;
+  font-size: 8px;
 }
 
 .why {
@@ -167,56 +190,50 @@
   line-height: 1.65;
 }
 
-.layerDiagram {
+.graphExplanation {
   display: grid;
-  grid-template-columns: 1fr 44px 1fr 44px 1fr 44px 1fr;
+  grid-template-columns: minmax(0, 1.55fr) minmax(250px, 0.65fr);
   align-items: center;
-  min-height: 240px;
+  margin: 0;
   border-top: 1px solid var(--line-strong);
   background-image: radial-gradient(rgba(8, 125, 112, 0.14) 0.8px, transparent 0.8px);
   background-size: 20px 20px;
-  padding: 32px;
+  padding: 24px 28px;
 }
 
-.layerDiagram div {
-  display: grid;
-  place-items: center;
-  min-height: 126px;
-  border: 1px solid var(--line-strong);
-  border-radius: 50%;
-  background: var(--paper-bright);
+.graphExplanation figcaption {
+  border-left: 1px solid var(--line-strong);
+  padding: 24px 0 24px 28px;
 }
 
-.layerDiagram span,
-.layerDiagram small {
-  color: var(--quiet);
+.graphExplanation figcaption strong,
+.graphExplanation figcaption span {
+  display: block;
   font-family: var(--font-code);
-  font-size: 9px;
-  font-weight: 750;
 }
 
-.layerDiagram strong {
-  font-family: var(--font-code);
-  font-size: clamp(22px, 3vw, 38px);
-  letter-spacing: 0.04em;
+.graphExplanation figcaption strong {
+  color: var(--teal);
+  font-size: 12px;
+  letter-spacing: 0.05em;
 }
 
-.layerDiagram i {
-  position: relative;
-  height: 1px;
-  background: var(--teal);
+.graphExplanation figcaption span {
+  margin-top: 14px;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.8;
 }
 
-.layerDiagram i::after {
-  position: absolute;
-  top: -4px;
-  right: 0;
-  width: 8px;
-  height: 8px;
-  border-top: 1px solid var(--teal);
-  border-right: 1px solid var(--teal);
-  content: "";
-  transform: rotate(45deg);
+.graphExplanation figcaption p {
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.mobileGraphHint {
+  display: none;
 }
 
 .enqueueRule {
@@ -241,7 +258,7 @@
 .lab {
   background: #10221f;
   color: #f7fbf9;
-  padding-block: 92px 100px;
+  padding-block: 82px 88px;
 }
 
 .labHeader {
@@ -344,7 +361,7 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  grid-template-columns: minmax(0, 1.55fr) minmax(290px, 0.65fr);
   border: 1px solid #3a524c;
   border-top: 0;
   background: #f8faf7;
@@ -355,7 +372,32 @@
 .graphPanel {
   min-width: 0;
   border-right: 1px solid var(--line);
-  padding: 26px;
+  padding: 20px;
+}
+
+.graphMeta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 2px 12px;
+}
+
+.graphMeta strong,
+.graphMeta span {
+  font-family: var(--font-code);
+}
+
+.graphMeta strong {
+  color: var(--teal-deep);
+  font-size: 11px;
+}
+
+.graphMeta span {
+  color: var(--quiet);
+  font-size: 9px;
+  line-height: 1.5;
+  text-align: right;
 }
 
 .graphScroller {
@@ -371,13 +413,13 @@
 
 .graph {
   display: block;
-  min-width: 650px;
+  min-width: 620px;
   width: 100%;
 }
 
 .edges line {
   stroke: #c4cfcb;
-  stroke-width: 3;
+  stroke-width: 2.5;
 }
 
 .edges .activeEdge {
@@ -400,8 +442,14 @@
 
 .graphNode .nodeDistance {
   fill: var(--quiet);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 750;
+}
+
+.nodeDistanceBackground {
+  fill: #f8faf7;
+  stroke: var(--line);
+  stroke-width: 1;
 }
 
 .idleNode circle {
@@ -461,6 +509,13 @@
 .legend .legendQueue { border-color: var(--teal); background: var(--teal-soft); }
 .legend .legendVisited { border-color: #42554f; background: #647872; }
 .legend .legendIdle { border-color: #aab8b3; background: #f8faf7; }
+.legend .legendEdge {
+  width: 16px;
+  height: 0;
+  border: 0;
+  border-top: 2px solid var(--teal);
+  border-radius: 0;
+}
 
 .inspector {
   min-width: 0;
@@ -468,7 +523,7 @@
 
 .inspector > div {
   border-bottom: 1px solid var(--line);
-  padding: 25px;
+  padding: 22px;
 }
 
 .inspector > div:last-child {
@@ -486,7 +541,7 @@
 }
 
 .currentStatus p {
-  margin: 20px 0 0;
+  margin: 14px 0 0;
   color: var(--quiet);
   font-size: 11px;
   font-weight: 750;
@@ -496,7 +551,7 @@
   display: block;
   margin-top: 5px;
   font-family: var(--font-code);
-  font-size: 42px;
+  font-size: 36px;
 }
 
 .currentStatus small {
@@ -522,7 +577,7 @@
 .orderView ol {
   display: flex;
   gap: 7px;
-  margin: 20px 0 0;
+  margin: 18px 0 0;
   padding: 0;
   list-style: none;
 }
@@ -581,14 +636,14 @@
 
 .distancePanel {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
+  grid-template-columns: 230px minmax(0, 1fr);
   gap: 24px;
   align-items: center;
   border: 1px solid #3a524c;
   border-top: 0;
   background: #eef3f0;
   color: var(--ink);
-  padding: 21px 25px;
+  padding: 17px 22px;
 }
 
 .distancePanel p {
@@ -639,7 +694,7 @@
   border: 1px solid #3a524c;
   border-top: 0;
   background: #0c1b18;
-  padding: 22px 25px;
+  padding: 18px 22px;
 }
 
 .actionStatus span {
@@ -777,7 +832,7 @@
 
 @media (max-width: 720px) {
   .heroMap {
-    width: min(104%, 570px);
+    width: min(108%, 600px);
   }
 
   .why {
@@ -820,28 +875,35 @@
     border-bottom: 0;
   }
 
-  .layerDiagram {
-    grid-template-columns: 1fr;
-    gap: 18px;
-    padding: 24px;
+  .graphExplanation {
+    display: block;
+    overflow-x: auto;
+    padding: 16px 14px 20px;
   }
 
-  .layerDiagram div {
-    min-height: 112px;
-    border-radius: 8px;
+  .mobileGraphHint {
+    position: sticky;
+    left: 0;
+    display: block;
+    width: fit-content;
+    margin: 0 0 8px 4px;
+    color: var(--teal);
+    font-family: var(--font-code);
+    font-size: 9px;
+    font-weight: 800;
   }
 
-  .layerDiagram i {
-    width: 1px;
-    height: 28px;
-    margin-inline: auto;
+  .howGraph {
+    min-width: 560px;
   }
 
-  .layerDiagram i::after {
-    top: auto;
-    right: -4px;
-    bottom: 0;
-    transform: rotate(135deg);
+  .graphExplanation figcaption {
+    position: sticky;
+    left: 0;
+    width: calc(100vw - 56px);
+    border-top: 1px solid var(--line-strong);
+    border-left: 0;
+    padding: 20px 4px 0;
   }
 
   .enqueueRule,
@@ -887,17 +949,40 @@
     padding: 14px;
   }
 
+  .graphMeta {
+    display: block;
+  }
+
+  .graphMeta span {
+    display: block;
+    margin-top: 5px;
+    text-align: left;
+  }
+
   .graph {
-    min-width: 600px;
+    min-width: 560px;
   }
 
   .inspector {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .currentStatus {
+    grid-column: 1 / -1;
   }
 
   .inspector > div {
-    border-right: 0;
+    border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
+  }
+
+  .inspector > div:nth-child(2) {
+    border-bottom: 0;
+  }
+
+  .inspector > div:last-child {
+    border-right: 0;
+    border-bottom: 0;
   }
 
   .distancePanel {

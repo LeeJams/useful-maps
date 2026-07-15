@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AlgorithmCodeTabs, type AlgorithmCodeExample } from "@/components/algorithm-code-tabs";
 import { GuideHero } from "@/components/guide-hero";
 import { getGuide } from "@/content/guides";
-import { BfsLab } from "./bfs-lab";
+import { BfsLab, type BfsGraphData } from "./bfs-lab";
 import styles from "./bfs.module.css";
 
 const guide = getGuide("bfs");
@@ -12,52 +12,86 @@ export const metadata: Metadata = {
   description: "큐, 방문 처리 시점, 거리표가 함께 움직이는 과정을 보며 너비 우선 탐색과 무가중 그래프 최단 거리를 이해합니다."
 };
 
-function BfsHeroVisual() {
+const bfsGraph = {
+  nodes: ["A", "B", "C", "D", "E", "F", "G"],
+  edges: [
+    ["A", "B"], ["A", "C"], ["B", "D"], ["B", "E"],
+    ["C", "F"], ["E", "G"], ["F", "G"]
+  ],
+  positions: {
+    A: { x: 80, y: 184 },
+    B: { x: 245, y: 105 },
+    C: { x: 245, y: 270 },
+    D: { x: 430, y: 54 },
+    E: { x: 430, y: 166 },
+    F: { x: 430, y: 300 },
+    G: { x: 615, y: 230 }
+  }
+} as const satisfies BfsGraphData;
+
+const distanceLayers = [
+  { x: 80, label: "거리 0" },
+  { x: 245, label: "거리 1" },
+  { x: 430, label: "거리 2" },
+  { x: 615, label: "거리 3" }
+] as const;
+
+function BfsGraphVisual({ hero = false }: { hero?: boolean }) {
   return (
     <svg
-      className={styles.heroMap}
-      viewBox="0 0 640 620"
+      className={hero ? styles.heroMap : styles.howGraph}
+      viewBox={hero ? "0 0 700 510" : "0 0 700 350"}
       role="img"
-      aria-labelledby="bfs-hero-title bfs-hero-desc"
+      aria-labelledby={hero ? "bfs-hero-title bfs-hero-desc" : "bfs-how-graph-title bfs-how-graph-desc"}
     >
-      <title id="bfs-hero-title">A에서 시작한 BFS의 네 거리층</title>
-      <desc id="bfs-hero-desc">시작점 A에서 거리 1인 B와 C, 거리 2인 D, E, F, 거리 3인 G까지 넓어지는 그래프입니다.</desc>
-      <g className={styles.heroRings}>
-        <circle cx="320" cy="270" r="120" />
-        <circle cx="320" cy="270" r="195" />
-        <circle cx="320" cy="270" r="240" />
-      </g>
-      <g className={styles.heroEdges}>
-        <path d="M320 270 220 205M320 270l100-65M220 205l-45-65M220 205l40-120M420 205 380 85M260 85l60-55M380 85l-60-55" />
-      </g>
-      <g className={`${styles.heroNode} ${styles.heroStart}`} transform="translate(320 270)"><circle r="29" /><text>A</text></g>
-      <g className={styles.heroNode} transform="translate(220 205)"><circle r="27" /><text>B</text></g>
-      <g className={styles.heroNode} transform="translate(420 205)"><circle r="27" /><text>C</text></g>
-      <g className={styles.heroNode} transform="translate(175 140)"><circle r="25" /><text>D</text></g>
-      <g className={styles.heroNode} transform="translate(260 85)"><circle r="25" /><text>E</text></g>
-      <g className={styles.heroNode} transform="translate(380 85)"><circle r="25" /><text>F</text></g>
-      <g className={styles.heroNode} transform="translate(320 30)"><circle r="25" /><text>G</text></g>
-      <g className={styles.heroLabels}>
-        <text x="350" y="286">거리 0</text>
-        <text x="438" y="178">거리 1</text>
-        <text x="445" y="108">거리 2</text>
-        <text x="350" y="29">거리 3</text>
-      </g>
-      <path className={styles.heroQueueLine} d="M110 520h420" />
-      <g className={styles.heroQueue}>
-        <text x="110" y="492">QUEUE / FRONT</text>
-        {[
-          [160, "C"],
-          [236, "D"],
-          [312, "E"]
-        ].map(([x, label], index) => (
-          <g key={label} transform={`translate(${x} 520)`}>
-            <rect x="-30" y="-24" width="60" height="48" rx="4" />
-            <text>{label}</text>
-            {index === 0 ? <path d="M-12 37h24m-12 0v18" /> : null}
+      <title id={hero ? "bfs-hero-title" : "bfs-how-graph-title"}>A에서 시작한 무방향 그래프 BFS의 네 거리층</title>
+      <desc id={hero ? "bfs-hero-desc" : "bfs-how-graph-desc"}>
+        A-B, A-C, B-D, B-E, C-F, E-G, F-G의 일곱 간선으로 연결된 무방향 그래프입니다. E와 F에서 온 두 경로가 G에서 다시 만납니다.
+      </desc>
+      <g className={styles.layerGuides}>
+        {distanceLayers.map((layer) => (
+          <g key={layer.label}>
+            <line x1={layer.x} y1="36" x2={layer.x} y2="334" />
+            <text x={layer.x} y="20">{layer.label}</text>
           </g>
         ))}
       </g>
+      <g className={styles.staticEdges}>
+        {bfsGraph.edges.map(([from, to]) => (
+          <line
+            key={`${from}-${to}`}
+            x1={bfsGraph.positions[from].x}
+            y1={bfsGraph.positions[from].y}
+            x2={bfsGraph.positions[to].x}
+            y2={bfsGraph.positions[to].y}
+          />
+        ))}
+      </g>
+      <g className={styles.staticNodes}>
+        {bfsGraph.nodes.map((node) => (
+          <g
+            className={node === "A" ? styles.staticStart : node === "G" ? styles.staticMerge : undefined}
+            key={node}
+            transform={`translate(${bfsGraph.positions[node].x} ${bfsGraph.positions[node].y})`}
+          >
+            <circle r="27" />
+            <text>{node}</text>
+          </g>
+        ))}
+      </g>
+      {hero ? (
+        <g className={styles.heroQueue}>
+          <text x="80" y="402">A 처리 뒤 · QUEUE</text>
+          <path d="M80 468h535" />
+          {[[130, "B"], [202, "C"]].map(([x, label], index) => (
+            <g key={label} transform={`translate(${x} 448)`}>
+              <rect x="-28" y="-22" width="56" height="44" rx="4" />
+              <text>{label}</text>
+              {index === 0 ? <text className={styles.queueFront} y="38">FRONT</text> : null}
+            </g>
+          ))}
+        </g>
+      ) : null}
     </svg>
   );
 }
@@ -194,9 +228,9 @@ export default function BfsGuidePage() {
       <GuideHero
         guide={guide}
         title="가까운 곳부터, 한 층씩 넓혀 갑니다"
-        lead="BFS는 먼저 발견한 노드를 먼저 꺼내는 큐를 사용합니다. 그래서 가중치가 없는 그래프에서는 시작점에서 가장 적은 간선으로 도착하는 순서를 놓치지 않습니다."
+        lead="BFS는 먼저 발견한 노드를 먼저 꺼내는 큐를 사용합니다. 아래는 트리가 아니라, 두 경로가 G에서 다시 만나는 무방향 그래프입니다. BFS는 이 그래프를 시작점에서 가까운 거리층부터 탐색합니다."
       >
-        <BfsHeroVisual />
+        <BfsGraphVisual hero />
       </GuideHero>
 
       <section className={`${styles.why} content-wrap`} aria-labelledby="bfs-why">
@@ -231,15 +265,15 @@ export default function BfsGuidePage() {
             <li><span>04</span><div><strong>ENQUEUE</strong><p>새 이웃을 큐 맨 뒤에 차례로 넣습니다.</p></div></li>
           </ol>
 
-          <div className={styles.layerDiagram} role="img" aria-label="BFS가 거리 0부터 거리 3까지 순서대로 노드를 큐에 넣는 도식">
-            <div><span>거리 0</span><strong>A</strong><small>시작</small></div>
-            <i aria-hidden="true" />
-            <div><span>거리 1</span><strong>B · C</strong><small>먼저 처리</small></div>
-            <i aria-hidden="true" />
-            <div><span>거리 2</span><strong>D · E · F</strong><small>그다음 처리</small></div>
-            <i aria-hidden="true" />
-            <div><span>거리 3</span><strong>G</strong><small>마지막 처리</small></div>
-          </div>
+          <figure className={styles.graphExplanation}>
+            <span className={styles.mobileGraphHint}>거리 0 → 거리 3 · 옆으로 밀어 전체 그래프 보기</span>
+            <BfsGraphVisual />
+            <figcaption>
+              <strong>무방향 그래프 · 정점 7개 · 간선 7개</strong>
+              <span>A-B · A-C · B-D · B-E · C-F · E-G · F-G</span>
+              <p>E-G와 F-G가 모두 있으므로 트리가 아닙니다. G는 E와 F 양쪽에서 갈 수 있지만, 먼저 발견한 한 번만 큐에 들어갑니다.</p>
+            </figcaption>
+          </figure>
         </div>
 
         <aside className={styles.enqueueRule}>
@@ -251,7 +285,7 @@ export default function BfsGuidePage() {
         </aside>
       </section>
 
-      <BfsLab />
+      <BfsLab graph={bfsGraph} />
 
       <section className={`${styles.apply} content-wrap`} aria-labelledby="bfs-apply">
         <div className="section-heading">
