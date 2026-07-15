@@ -1200,7 +1200,7 @@ code:not(pre code) {
 }
 
 .worker-inspector > section,
-.sw-code-panel { border-bottom: 1px solid var(--line); padding: 28px; }
+.sw-code-panel { min-width: 0; border-bottom: 1px solid var(--line); padding: 28px; }
 .worker-inspector > section > header { display: flex; justify-content: space-between; align-items: start; gap: 15px; }
 .worker-inspector .eyebrow { font-size: 11px; }
 .worker-inspector h3 { margin: 7px 0 0; font-size: 22px; }
@@ -1215,13 +1215,13 @@ code:not(pre code) {
   list-style: none;
 }
 
-.event-log li { display: grid; grid-template-columns: 92px 76px 1fr; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-family: var(--font-code); font-size: 12px; line-height: 1.5; }
+.event-log li { display: grid; grid-template-columns: 92px 76px minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-family: var(--font-code); font-size: 12px; line-height: 1.5; }
 .event-log li:first-child { border-top: 0; }
 .event-log time { color: var(--quiet); }
 .event-log strong { width: fit-content; border-radius: 4px; background: var(--blue-soft); padding: 3px 7px; color: var(--blue); font-size: 11px; }
 .event-log .log-cache, .event-log .log-activate, .event-log .log-install { background: var(--teal-soft); color: var(--teal-deep); }
 .event-log .log-error { background: #f9e2e6; color: var(--red); }
-.event-log span { color: var(--ink-soft); word-break: break-word; }
+.event-log span { min-width: 0; color: var(--ink-soft); overflow-wrap: anywhere; }
 .event-log .empty-log { display: block; color: var(--quiet); font-size: 13px; }
 
 .cache-snapshot { max-height: 300px; margin-top: 20px; overflow: auto; }

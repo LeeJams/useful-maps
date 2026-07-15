@@ -73,7 +73,6 @@ function RequestFlow({ source, run, strategy }: { source: string; run: number; s
   const goesCache = cacheBeforeNetwork || ["network", "cache", "cache-fallback", "generated-offline", "stale-cache"].includes(source);
   const networkFailed = requestFailed || ["cache-fallback", "generated-offline"].includes(source);
   const cacheFailed = source === "generated-offline" || cacheBeforeNetwork;
-  const cacheAfterNetwork = goesNetwork && (source === "network" || networkFailed);
   const requestMotionId = `flow-request-motion-${run}`;
   const networkMotionId = `flow-network-motion-${run}`;
   const cacheMotionId = `flow-cache-motion-${run}`;
@@ -82,24 +81,53 @@ function RequestFlow({ source, run, strategy }: { source: string; run: number; s
 
   useEffect(() => {
     if (run === 0) return;
+    const group = animationGroupRef.current;
+    if (!group) return;
 
-    const motions = Array.from(
-      animationGroupRef.current?.querySelectorAll<SVGAnimationElement>("animateMotion") ?? []
-    );
+    const motions = Array.from(group.querySelectorAll<SVGAnimationElement>("animateMotion"));
+    const byId = (id: string) => motions.find((motion) => motion.id === id) ?? null;
+
     const revealPacket = (event: Event) => {
       (event.currentTarget as SVGAnimationElement).parentElement?.setAttribute("opacity", "1");
     };
     motions.forEach((motion) => motion.addEventListener("beginEvent", revealPacket));
 
-    const frame = window.requestAnimationFrame(() => {
-      motions.find((motion) => motion.hasAttribute("data-flow-start"))?.beginElement();
-    });
+    // 패킷이 지나갈 순서를 명시적으로 세운다. SMIL의 begin="A.end" 동기화 체인은
+    // Blink에서 3단(요청→네트워크→캐시)처럼 syncbase가 다시 syncbase에 물리면
+    // 마지막 단계가 발화되지 않는 경우가 있어, endEvent를 받아 JS로 직접 이어준다.
+    const order = [requestMotionId];
+    if (cacheBeforeNetwork) {
+      if (goesCache) order.push(cacheMotionId);
+      if (goesNetwork) order.push(networkMotionId);
+    } else {
+      if (goesNetwork) order.push(networkMotionId);
+      if (goesCache) order.push(cacheMotionId);
+    }
+    const steps = order
+      .map(byId)
+      .filter((motion): motion is SVGAnimationElement => Boolean(motion));
+
+    const timers: number[] = [];
+    const chained: Array<{ el: SVGAnimationElement; handler: () => void }> = [];
+    for (let index = 0; index < steps.length - 1; index += 1) {
+      const current = steps[index];
+      const next = steps[index + 1];
+      const handler = () => {
+        timers.push(window.setTimeout(() => next.beginElement(), 120));
+      };
+      current.addEventListener("endEvent", handler);
+      chained.push({ el: current, handler });
+    }
+
+    const frame = window.requestAnimationFrame(() => steps[0]?.beginElement());
 
     return () => {
       window.cancelAnimationFrame(frame);
+      timers.forEach((timer) => window.clearTimeout(timer));
       motions.forEach((motion) => motion.removeEventListener("beginEvent", revealPacket));
+      chained.forEach(({ el, handler }) => el.removeEventListener("endEvent", handler));
     };
-  }, [run, source]);
+  }, [run, source, cacheBeforeNetwork, goesCache, goesNetwork, requestMotionId, networkMotionId, cacheMotionId]);
 
   return (
     <div className="flow-map-wrap">
@@ -138,16 +166,16 @@ function RequestFlow({ source, run, strategy }: { source: string; run: number; s
         {run > 0 && (
           <g key={run} ref={animationGroupRef}>
             <circle className="flow-packet packet-request" r="7" opacity="0">
-              <animateMotion id={requestMotionId} data-flow-start begin="indefinite" dur=".7s" fill="freeze"><mpath href="#flow-bw" /></animateMotion>
+              <animateMotion id={requestMotionId} begin="indefinite" dur=".7s" fill="freeze"><mpath href="#flow-bw" /></animateMotion>
             </circle>
             {goesNetwork && (
               <circle className="flow-packet packet-network" r="7" opacity="0">
-                <animateMotion id={networkMotionId} begin={`${cacheBeforeNetwork ? cacheMotionId : requestMotionId}.end+.12s`} dur=".8s" fill="freeze"><mpath href="#flow-wn" /></animateMotion>
+                <animateMotion id={networkMotionId} begin="indefinite" dur=".8s" fill="freeze"><mpath href="#flow-wn" /></animateMotion>
               </circle>
             )}
             {goesCache && (
               <circle className="flow-packet packet-cache" r="7" opacity="0">
-                <animateMotion id={cacheMotionId} begin={`${cacheAfterNetwork && !cacheBeforeNetwork ? networkMotionId : requestMotionId}.end+.12s`} dur=".8s" fill="freeze"><mpath href="#flow-wc" /></animateMotion>
+                <animateMotion id={cacheMotionId} begin="indefinite" dur=".8s" fill="freeze"><mpath href="#flow-wc" /></animateMotion>
               </circle>
             )}
           </g>
