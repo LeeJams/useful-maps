@@ -1,0 +1,9 @@
+{
+  "version": "2026.07.15-next-v1",
+  "assets": [
+    "/service-worker/",
+    "/service-worker/use-cases/",
+    "/service-worker/offline.html",
+    "/service-worker/data/requests.json"
+  ]
+}

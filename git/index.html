@@ -1,0 +1,2103 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f766e" />
+    <title>Git Visual Lab</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2310201f'/%3E%3Ccircle cx='9' cy='9' r='3' fill='white'/%3E%3Ccircle cx='23' cy='9' r='3' fill='white'/%3E%3Ccircle cx='16' cy='23' r='3' fill='white'/%3E%3Cpath d='M11 10l4 10M21 10l-4 10M12 9h8' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f5f7fa;
+        --surface: #ffffff;
+        --surface-soft: #f8fafc;
+        --ink: #111827;
+        --muted: #5b6678;
+        --quiet: #7b8798;
+        --line: #dfe6ee;
+        --line-strong: #c3cedb;
+        --teal: #0f766e;
+        --teal-dark: #0b5f59;
+        --teal-soft: #e2f3f0;
+        --blue: #2563eb;
+        --blue-soft: #e8f0ff;
+        --green: #15803d;
+        --green-soft: #e8f6ed;
+        --amber: #854b00;
+        --amber-soft: #ffefcc;
+        --red: #be123c;
+        --red-soft: #fde7ee;
+        --radius: 8px;
+        --shadow: 0 12px 32px rgba(17, 24, 39, 0.07);
+        font-family:
+          "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+          system-ui, "Apple SD Gothic Neo", "Segoe UI", "Noto Sans KR",
+          "Malgun Gothic", "Helvetica Neue", Arial, sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      html {
+        min-width: 320px;
+        background: var(--bg);
+        scroll-padding-top: 86px;
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, #ffffff 0, #f8fafc 290px, var(--bg) 820px),
+          var(--bg);
+        color: var(--ink);
+        letter-spacing: 0;
+        word-break: keep-all;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      code,
+      pre {
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+      }
+
+      code {
+        border-radius: 5px;
+        background: var(--teal-soft);
+        color: var(--teal-dark);
+        padding: 1px 5px;
+        font-size: 0.92em;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        min-height: 66px;
+        padding: 12px 22px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(16px);
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 20px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .brand-mark {
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius);
+        background: #10201f;
+        color: #ffffff;
+        box-shadow: 0 10px 20px rgba(15, 118, 110, 0.2);
+      }
+
+      .brand svg,
+      .nav-button svg,
+      .icon svg,
+      .copy-button svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2;
+      }
+
+      .brand-mark svg {
+        width: 23px;
+        height: 23px;
+      }
+
+      .top-actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .nav-button,
+      .tab-button,
+      .copy-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 38px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius);
+        background: #ffffff;
+        color: var(--ink);
+        padding: 0 12px;
+        font-size: 14px;
+        font-weight: 850;
+        text-decoration: none;
+        white-space: nowrap;
+        transition:
+          background 0.16s ease,
+          border-color 0.16s ease,
+          color 0.16s ease,
+          transform 0.16s ease;
+      }
+
+      .nav-button:hover,
+      .tab-button:hover,
+      .copy-button:hover {
+        border-color: var(--teal);
+        color: var(--teal-dark);
+        transform: translateY(-1px);
+      }
+
+      .nav-button.primary,
+      .tab-button.active {
+        border-color: var(--teal);
+        background: var(--teal);
+        color: #ffffff;
+      }
+
+      .nav-button.primary:hover,
+      .tab-button.active:hover {
+        background: var(--teal-dark);
+        color: #ffffff;
+      }
+
+      .page {
+        width: min(1440px, calc(100% - 36px));
+        margin: 22px auto 72px;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 0.92fr) minmax(340px, 0.58fr);
+        gap: 18px;
+        align-items: stretch;
+        margin-bottom: 18px;
+      }
+
+      .hero-copy {
+        display: grid;
+        align-content: center;
+        min-height: 184px;
+        border-bottom: 1px solid var(--line);
+        padding: 8px 0 22px;
+      }
+
+      .hero-copy h1 {
+        margin: 0;
+        max-width: 860px;
+        font-size: 56px;
+        line-height: 1.02;
+        font-weight: 950;
+      }
+
+      .hero-copy p {
+        margin: 16px 0 0;
+        max-width: 830px;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.7;
+        font-weight: 650;
+      }
+
+      .answer-panel,
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .answer-panel {
+        display: grid;
+        align-content: center;
+        gap: 12px;
+        padding: 20px;
+      }
+
+      .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        width: fit-content;
+        border-radius: 999px;
+        background: var(--green-soft);
+        color: var(--green);
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+
+      .label.warn {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .label.info {
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .answer-panel h2 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 1.4;
+      }
+
+      .answer-panel p,
+      .answer-panel li {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 650;
+      }
+
+      .answer-panel ol {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+        padding-left: 20px;
+      }
+
+      .lab-layout {
+        display: grid;
+        grid-template-columns: 180px minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+      }
+
+      .side-nav {
+        position: sticky;
+        top: 86px;
+        display: grid;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 12px;
+        box-shadow: var(--shadow);
+      }
+
+      .side-nav a {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 40px;
+        border-radius: var(--radius);
+        color: var(--muted);
+        padding: 0 10px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 850;
+      }
+
+      .side-nav a:hover,
+      .side-nav a.active {
+        background: var(--teal-soft);
+        color: var(--teal-dark);
+      }
+
+      .workspace {
+        display: grid;
+        gap: 18px;
+        min-width: 0;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        padding: 16px 18px;
+      }
+
+      .panel-header h2,
+      .panel-header h3 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.25;
+      }
+
+      .panel-header p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.55;
+        font-weight: 650;
+      }
+
+      .strategy-tabs {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .tab-button {
+        min-height: 34px;
+        padding: 0 10px;
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      .lab-panel-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1.36fr) minmax(310px, 0.64fr);
+        gap: 0;
+      }
+
+      .graph-area {
+        min-width: 0;
+        border-right: 1px solid var(--line);
+        padding: 16px;
+      }
+
+      .graph-scroll {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background:
+          linear-gradient(var(--line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--line) 1px, transparent 1px),
+          #fbfdff;
+        background-size: 42px 42px;
+      }
+
+      #commit-graph {
+        display: block;
+        width: 100%;
+        min-width: 760px;
+        height: auto;
+        aspect-ratio: 900 / 430;
+      }
+
+      .lane {
+        fill: none;
+        stroke: #7f8fa3;
+        stroke-linecap: round;
+        stroke-width: 4;
+      }
+
+      .lane.feature {
+        stroke: #4f8f87;
+      }
+
+      .lane.rebased {
+        stroke: #5f7fd6;
+      }
+
+      .lane.revert {
+        stroke: #c94b70;
+      }
+
+      .lane.ghost {
+        stroke: #7f8fa3;
+        stroke-dasharray: 8 9;
+      }
+
+      .commit {
+        cursor: pointer;
+      }
+
+      .commit circle {
+        stroke: #ffffff;
+        stroke-width: 4;
+        filter: drop-shadow(0 5px 8px rgba(17, 24, 39, 0.16));
+      }
+
+      .commit text {
+        pointer-events: none;
+        fill: #ffffff;
+        font-size: 13px;
+        font-weight: 950;
+        text-anchor: middle;
+        dominant-baseline: central;
+      }
+
+      .commit:focus-visible circle {
+        stroke: var(--ink);
+        stroke-width: 5;
+      }
+
+      #commit-graph.compact .commit text {
+        font-size: 11px;
+      }
+
+      .main-node circle {
+        fill: #334155;
+      }
+
+      .feature-node circle {
+        fill: var(--teal);
+      }
+
+      .new-node circle {
+        fill: var(--blue);
+      }
+
+      .merge-node circle {
+        fill: var(--green);
+      }
+
+      .squash-node circle {
+        fill: var(--amber);
+      }
+
+      .revert-node circle {
+        fill: var(--red);
+      }
+
+      .ghost-node {
+        cursor: default;
+      }
+
+      .ghost-node circle {
+        fill: #d4dde6;
+        filter: none;
+      }
+
+      .ghost-node text {
+        fill: #465568;
+      }
+
+      .graph-label {
+        fill: var(--muted);
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .bubble {
+        fill: #ffffff;
+        stroke: var(--line-strong);
+        stroke-width: 1.2;
+      }
+
+      .bubble-text {
+        fill: var(--ink);
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .graph-note {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        margin-top: 13px;
+      }
+
+      .graph-note p,
+      .node-readout {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+
+      .node-readout {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 9px 11px;
+        white-space: nowrap;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        margin-top: 12px;
+      }
+
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 850;
+      }
+
+      .legend i {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--teal);
+      }
+
+      .legend .main i {
+        background: #334155;
+      }
+
+      .legend .new i {
+        background: var(--blue);
+      }
+
+      .legend .merge i {
+        background: var(--green);
+      }
+
+      .legend .squash i {
+        background: var(--amber);
+      }
+
+      .legend .revert i {
+        background: var(--red);
+      }
+
+      .inspector {
+        display: grid;
+        align-content: start;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .inspector h2 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.3;
+      }
+
+      .inspector p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+        font-weight: 650;
+      }
+
+      .command-box {
+        overflow: hidden;
+        border: 1px solid #1f2937;
+        border-radius: var(--radius);
+        background: #101820;
+      }
+
+      .command-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 9px 11px;
+        color: #dbe7f3;
+        font-size: 12px;
+        font-weight: 900;
+      }
+
+      .command-box pre {
+        margin: 0;
+        overflow-x: auto;
+        padding: 14px;
+        color: #e6edf3;
+        font-size: 13px;
+        line-height: 1.65;
+        white-space: pre;
+      }
+
+      .copy-button {
+        min-height: 28px;
+        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .copy-button:hover {
+        border-color: rgba(255, 255, 255, 0.45);
+        color: #ffffff;
+      }
+
+      .mini-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .mini {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface-soft);
+        padding: 12px;
+      }
+
+      .mini strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 13px;
+      }
+
+      .mini span {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+        font-weight: 650;
+      }
+
+      .section {
+        display: grid;
+        gap: 14px;
+        scroll-margin-top: 86px;
+      }
+
+      #lab {
+        scroll-margin-top: 86px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .section-title h2 {
+        margin: 0;
+        font-size: 28px;
+        line-height: 1.2;
+      }
+
+      .section-title p {
+        margin: 0;
+        max-width: 720px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.7;
+        font-weight: 650;
+      }
+
+      .plain-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .plain-item,
+      .tip,
+      .command-card {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 16px;
+        box-shadow: 0 8px 24px rgba(17, 24, 39, 0.05);
+      }
+
+      .icon {
+        display: grid;
+        place-items: center;
+        width: 38px;
+        height: 38px;
+        border-radius: var(--radius);
+        background: var(--teal-soft);
+        color: var(--teal-dark);
+        margin-bottom: 12px;
+      }
+
+      .plain-item h3,
+      .tip h3,
+      .command-card h3 {
+        margin: 0 0 8px;
+        font-size: 16px;
+        line-height: 1.35;
+      }
+
+      .plain-item p,
+      .tip p,
+      .command-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+
+      .rebase-steps {
+        display: grid;
+        grid-template-columns: 0.92fr 1.08fr;
+        gap: 14px;
+      }
+
+      .steps {
+        display: grid;
+        gap: 10px;
+        margin: 0;
+        padding: 16px;
+        list-style: none;
+      }
+
+      .steps li {
+        display: grid;
+        grid-template-columns: 34px 1fr;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 12px;
+      }
+
+      .steps li:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .step-number {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: var(--radius);
+        background: var(--teal-soft);
+        color: var(--teal-dark);
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .steps strong {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 15px;
+      }
+
+      .steps p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+
+      .rule-list {
+        overflow: hidden;
+      }
+
+      .rule {
+        display: grid;
+        grid-template-columns: 128px 1fr;
+        gap: 14px;
+        border-bottom: 1px solid var(--line);
+        padding: 15px 16px;
+      }
+
+      .rule:last-child {
+        border-bottom: 0;
+      }
+
+      .rule dt {
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 950;
+      }
+
+      .rule dd {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+
+      .matrix {
+        overflow-x: auto;
+      }
+
+      .matrix table {
+        width: 100%;
+        min-width: 820px;
+        border-collapse: collapse;
+      }
+
+      .matrix th,
+      .matrix td {
+        border-bottom: 1px solid var(--line);
+        padding: 14px;
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .matrix th {
+        background: var(--surface-soft);
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 950;
+      }
+
+      .matrix td {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+
+      .matrix tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .matrix strong {
+        color: var(--ink);
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        border-radius: 999px;
+        background: var(--teal-soft);
+        color: var(--teal-dark);
+        padding: 4px 8px;
+        font-size: 12px;
+        font-weight: 950;
+      }
+
+      .badge.warn {
+        background: var(--amber-soft);
+        color: var(--amber);
+      }
+
+      .badge.danger {
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .command-grid,
+      .tip-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .command-card {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .command-card h3 {
+        border-bottom: 1px solid var(--line);
+        padding: 14px 14px 0;
+      }
+
+      .command-card p {
+        padding: 0 14px 12px;
+      }
+
+      .command-card pre {
+        margin: 0 14px 14px;
+        overflow-x: auto;
+        border-radius: var(--radius);
+        background: #101820;
+        color: #e6edf3;
+        padding: 12px;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .tip-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tip {
+        display: grid;
+        grid-template-columns: 38px 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .tip .icon {
+        margin: 0;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        z-index: 120;
+        transform: translateX(-50%) translateY(16px);
+        opacity: 0;
+        pointer-events: none;
+        border-radius: var(--radius);
+        background: #10201f;
+        color: #ffffff;
+        padding: 10px 12px;
+        font-size: 13px;
+        font-weight: 850;
+        transition:
+          opacity 0.18s ease,
+          transform 0.18s ease;
+      }
+
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.001ms !important;
+          animation-duration: 0.001ms !important;
+        }
+      }
+
+      @media (max-width: 1180px) {
+        .hero-grid,
+        .lab-layout,
+        .lab-panel-body,
+        .rebase-steps {
+          grid-template-columns: 1fr;
+        }
+
+        .side-nav {
+          position: static;
+          display: flex;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+
+        .side-nav::-webkit-scrollbar {
+          display: none;
+        }
+
+        .side-nav a {
+          min-width: max-content;
+        }
+
+        .graph-area {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .plain-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 779px) {
+        html {
+          scroll-padding-top: 126px;
+        }
+
+        .topbar {
+          align-items: flex-start;
+          flex-direction: column;
+          padding: 12px;
+        }
+
+        .top-actions {
+          justify-content: flex-start;
+          width: 100%;
+          overflow-x: auto;
+          flex-wrap: nowrap;
+          scrollbar-width: none;
+        }
+
+        .top-actions::-webkit-scrollbar {
+          display: none;
+        }
+
+        .nav-button {
+          min-height: 36px;
+          padding: 0 10px;
+          font-size: 13px;
+        }
+
+        .page {
+          width: min(100% - 24px, 1440px);
+          margin-top: 14px;
+        }
+
+        .hero-copy {
+          min-height: 0;
+          padding-bottom: 18px;
+        }
+
+        .hero-copy h1 {
+          font-size: 38px;
+          line-height: 1.08;
+        }
+
+        .hero-copy p {
+          font-size: 15px;
+          line-height: 1.68;
+        }
+
+        .answer-panel h2 {
+          font-size: 19px;
+        }
+
+        .panel-header,
+        .section-title {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .strategy-tabs {
+          justify-content: flex-start;
+        }
+
+        .tab-button {
+          flex: 1 1 auto;
+          min-width: 88px;
+        }
+
+        .graph-area,
+        .inspector {
+          padding: 12px;
+        }
+
+        .graph-note {
+          grid-template-columns: 1fr;
+        }
+
+        .node-readout {
+          white-space: normal;
+        }
+
+        .mini-grid,
+        .plain-grid,
+        .command-grid,
+        .tip-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .rule {
+          grid-template-columns: 1fr;
+          gap: 5px;
+        }
+
+        .section,
+        #lab {
+          scroll-margin-top: 126px;
+        }
+
+        #commit-graph {
+          width: 520px;
+          min-width: 520px;
+          aspect-ratio: 520 / 340;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#lab" aria-label="Git Visual Lab">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <circle cx="6" cy="6" r="2.5"></circle>
+            <circle cx="18" cy="6" r="2.5"></circle>
+            <circle cx="12" cy="18" r="2.5"></circle>
+            <path d="M8.2 7.4 11 15.6M15.8 7.4 13 15.6M8.5 6h7"></path>
+          </svg>
+        </span>
+        <span>Git Visual Lab</span>
+      </a>
+      <nav class="top-actions" aria-label="바로가기">
+        <a class="nav-button" href="#rebase">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3v12a4 4 0 0 0 4 4h8"></path>
+            <path d="m15 16 3 3-3 3"></path>
+            <path d="M6 8h9"></path>
+          </svg>
+          Rebase
+        </a>
+        <a class="nav-button" href="#safe-merge">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 5v10a4 4 0 0 0 4 4h10"></path>
+            <path d="M19 5v14"></path>
+            <path d="M12 15h7"></path>
+          </svg>
+          되돌리기
+        </a>
+        <a class="nav-button primary" href="#lab">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6Z"></path>
+          </svg>
+          그래프 보기
+        </a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="hero-grid" aria-labelledby="page-title">
+        <div class="hero-copy">
+          <h1 id="page-title">Git은 커밋 그래프를 만들고 이어 가는 도구입니다</h1>
+          <p>
+            브랜치, rebase, merge, revert는 모두 그래프의 모양을 바꾸는 선택입니다.
+            아래 그래프에서 같은 7개 커밋에서 나온 변경이 단계에 따라 어떻게 보이는지 비교해 보세요.
+          </p>
+        </div>
+
+        <aside class="answer-panel" aria-label="질문에 대한 짧은 답">
+          <span class="label">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path d="m20 6-11 11-5-5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"></path>
+            </svg>
+            짧은 답
+          </span>
+          <h2>7개 커밋의 변경을 기능 단위로 되돌리기 쉽게 하려면 merge commit이나 squash commit을 남기세요.</h2>
+          <ol>
+            <li><code>git merge --no-ff feature</code>는 feature 병합 전체의 경계가 되는 merge commit을 남깁니다.</li>
+            <li>이 예시의 <code>git revert -m 1 &lt;merge_sha&gt;</code>는 1번 부모 D2를 mainline으로 삼아 M1과 D2 사이의 차이를 반대로 적용합니다.</li>
+            <li>squash merge라면 <code>git revert &lt;squash_sha&gt;</code>처럼 일반 커밋 하나를 되돌리면 됩니다.</li>
+            <li>merge revert 뒤 기능을 다시 넣으려면 revert 커밋을 다시 revert하거나, 현재 main에서 원래 변경 전체를 새 커밋으로 만드세요.</li>
+          </ol>
+          <p><code>&lt;merge_sha&gt;</code>처럼 꺾쇠로 표시한 값은 그대로 실행하지 말고 실제 SHA로 바꾸세요.</p>
+        </aside>
+      </section>
+
+      <div class="lab-layout">
+        <nav class="side-nav" aria-label="Git 개념 탐색 섹션">
+          <a class="active" href="#lab" aria-current="location">그래프 실험실</a>
+          <a href="#basics">기본 개념</a>
+          <a href="#rebase">Rebase</a>
+          <a href="#safe-merge">Merge/Revert</a>
+          <a href="#commands">명령어</a>
+        </nav>
+
+        <div class="workspace">
+          <section class="panel" id="lab" aria-label="커밋 그래프 실험실">
+            <div class="panel-header">
+              <div>
+                <h2>시나리오: feature 브랜치에 7개 커밋이 있습니다</h2>
+                <p>결과를 선택하면 그래프와 오른쪽 해설이 함께 바뀝니다. 커밋 노드를 누르면 각 노드의 의미도 확인할 수 있습니다.</p>
+              </div>
+              <div class="strategy-tabs" role="group" aria-label="그래프 단계 선택">
+                <button class="tab-button active" type="button" data-mode="before" aria-pressed="true">현재</button>
+                <button class="tab-button" type="button" data-mode="rebase" aria-pressed="false">rebase 후</button>
+                <button class="tab-button" type="button" data-mode="noff" aria-pressed="false">merge commit</button>
+                <button class="tab-button" type="button" data-mode="squash" aria-pressed="false">squash merge</button>
+                <button class="tab-button" type="button" data-mode="ff" aria-pressed="false">rebase + ff</button>
+                <button class="tab-button" type="button" data-mode="revert" aria-pressed="false">merge revert</button>
+              </div>
+            </div>
+
+            <div class="lab-panel-body">
+              <div class="graph-area">
+                <div class="graph-scroll">
+                  <svg id="commit-graph" viewBox="0 0 900 430" role="group" aria-label="조작 가능한 Git 커밋 그래프" aria-describedby="graph-caption node-readout"></svg>
+                </div>
+                <div class="graph-note">
+                  <p id="graph-caption"></p>
+                  <p class="node-readout" id="node-readout" aria-live="polite">커밋 노드를 누르면 설명이 바뀝니다.</p>
+                </div>
+                <div class="legend" aria-label="범례">
+                  <span class="main"><i></i>main</span>
+                  <span><i></i>feature</span>
+                  <span class="new"><i></i>rebase 후 새 커밋</span>
+                  <span class="merge"><i></i>merge commit</span>
+                  <span class="squash"><i></i>squash commit</span>
+                  <span class="revert"><i></i>revert commit</span>
+                </div>
+              </div>
+
+              <aside class="inspector">
+                <span class="label info" id="inspector-label" aria-live="polite">현재 상태</span>
+                <h2 id="inspector-title"></h2>
+                <p id="inspector-copy"></p>
+                <div class="command-box">
+                  <div class="command-head">
+                    <span>terminal</span>
+                    <button class="copy-button" type="button" data-copy="#inspector-command">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                        <rect x="2" y="2" width="13" height="13" rx="2"></rect>
+                      </svg>
+                      예시 복사
+                    </button>
+                  </div>
+                  <pre id="inspector-command" tabindex="0" aria-label="선택한 단계의 명령어 예시"></pre>
+                </div>
+                <div class="mini-grid">
+                  <div class="mini">
+                    <strong>좋은 상황</strong>
+                    <span id="inspector-good"></span>
+                  </div>
+                  <div class="mini">
+                    <strong>주의할 점</strong>
+                    <span id="inspector-watch"></span>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="section" id="basics">
+            <div class="section-title">
+              <h2>기본 개념은 네 가지입니다</h2>
+              <p>Git이 어렵게 느껴질 때는 명령어보다 그래프에서 무엇이 움직이는지 먼저 보세요.</p>
+            </div>
+            <div class="plain-grid">
+              <article class="plain-item">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="7" cy="12" r="2"></circle>
+                    <circle cx="17" cy="12" r="2"></circle>
+                    <path d="M9 12h6"></path>
+                  </svg>
+                </span>
+                <h3>Commit</h3>
+                <p>프로젝트의 스냅샷입니다. 각 커밋은 부모 커밋을 가리키기 때문에 선으로 이어집니다.</p>
+              </article>
+              <article class="plain-item">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 20V5"></path>
+                    <path d="M6 5h11l-2 4 2 4H6"></path>
+                  </svg>
+                </span>
+                <h3>Branch</h3>
+                <p>커밋을 가리키는 이름표입니다. 새 커밋을 만들면 현재 브랜치 이름표가 앞으로 이동합니다.</p>
+              </article>
+              <article class="plain-item">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 4v8a6 6 0 0 0 6 6h6"></path>
+                    <path d="M18 4v14"></path>
+                    <path d="m15 15 3 3 3-3"></path>
+                  </svg>
+                </span>
+                <h3>Merge</h3>
+                <p>두 브랜치의 변경을 합칩니다. <code>--no-ff</code>를 쓰면 합친 순간을 나타내는 커밋이 남습니다.</p>
+              </article>
+              <article class="plain-item">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M7 3v10a4 4 0 0 0 4 4h7"></path>
+                    <path d="m15 14 3 3-3 3"></path>
+                    <path d="M7 8h8"></path>
+                  </svg>
+                </span>
+                <h3>Rebase</h3>
+                <p>내 변경을 최신 main 뒤에 새 커밋으로 다시 적용합니다. 부모가 달라지므로 SHA도 달라집니다.</p>
+              </article>
+            </div>
+          </section>
+
+          <section class="section" id="rebase">
+            <div class="section-title">
+              <h2>Rebase는 내 커밋의 변경을 최신 main 위에 다시 적용하는 작업입니다</h2>
+              <p>그래프는 깔끔해지지만 커밋 ID가 바뀝니다. 그래서 혼자 쓰는 feature 브랜치에서 가장 안전합니다.</p>
+            </div>
+            <div class="rebase-steps">
+              <article class="panel">
+                <ol class="steps">
+                  <li>
+                    <span class="step-number">1</span>
+                    <div>
+                      <strong>main이 먼저 앞으로 갔습니다</strong>
+                      <p>다른 작업으로 D1, D2가 main에 추가됐고, 내 feature는 C2에서 갈라져 있습니다.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="step-number">2</span>
+                    <div>
+                      <strong>내 커밋을 패치처럼 잠시 떼어 둡니다</strong>
+                      <p>Git은 feature의 F1부터 F7까지 각 커밋의 변경을 순서대로 다시 적용할 준비를 합니다.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="step-number">3</span>
+                    <div>
+                      <strong>최신 main 뒤에 새 커밋으로 다시 붙입니다</strong>
+                      <p>D2 뒤에 각 변경을 다시 적용한 F1'부터 F7'까지가 생깁니다. 부모와 스냅샷이 달라져 SHA도 바뀝니다.</p>
+                    </div>
+                  </li>
+                  <li>
+                    <span class="step-number">4</span>
+                    <div>
+                      <strong>충돌이 나면 멈춘 지점에서 해결합니다</strong>
+                      <p><code>git status</code>로 확인하고 해결한 파일만 <code>git add</code>한 뒤 <code>git rebase --continue</code>합니다. 취소는 <code>git rebase --abort</code>입니다.</p>
+                    </div>
+                  </li>
+                </ol>
+              </article>
+
+              <dl class="panel rule-list">
+                <div class="rule">
+                  <dt>언제 쓰면 좋나요</dt>
+                  <dd>feature 브랜치를 혼자 쓰고 있고, 최신 main 위에서 테스트하고 싶을 때 좋습니다.</dd>
+                </div>
+                <div class="rule">
+                  <dt>언제 피해야 하나요</dt>
+                  <dd>이미 팀원이 가져간 공유 브랜치에서는 조심하세요. rebase는 기존 커밋을 새 커밋으로 다시 만들기 때문입니다.</dd>
+                </div>
+                <div class="rule">
+                  <dt>merge 전 팁</dt>
+                  <dd>rebase 후 fast-forward로 합치면 main에는 새로 만들어진 7개 커밋이 일렬로 들어갑니다. 기능 전체를 되돌릴 경계가 필요하면 <code>--no-ff</code>나 squash를 선택하세요.</dd>
+                </div>
+                <div class="rule">
+                  <dt>이미 push했다면</dt>
+                  <dd>혼자 쓰는 원격 feature를 rebase한 경우에도 팀 정책을 먼저 확인하세요. 원격 갱신에는 일반 <code>--force</code> 대신 <code>git push --force-with-lease</code>가 필요할 수 있습니다.</dd>
+                </div>
+              </dl>
+            </div>
+          </section>
+
+          <section class="section" id="safe-merge">
+            <div class="section-title">
+              <h2>7개 커밋을 되돌리기 쉽게 합치는 방법</h2>
+              <p>테스트 실패에 대비하려면 “main에 어떤 커밋을 남길지”가 중요합니다.</p>
+            </div>
+            <div class="panel matrix" role="region" aria-label="merge 전략 비교" tabindex="0">
+              <table>
+                <thead>
+                  <tr>
+                    <th>전략</th>
+                    <th>main에 남는 모양</th>
+                    <th>테스트 실패 시</th>
+                    <th>추천 상황</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Merge commit</strong><br /><span class="badge">되돌리기 기준 명확</span></td>
+                    <td>F1~F7 기록은 보존되고, main에는 M1 merge commit이 생깁니다.</td>
+                    <td><code>git revert -m 1 &lt;merge_sha&gt;</code>에서 1번 부모를 mainline으로 삼아 M1과 그 부모 사이의 차이를 반대로 적용합니다. merge 기록과 ancestry는 남습니다.</td>
+                    <td>커밋 기록과 기능 병합의 경계를 함께 남기고 싶을 때. revert 뒤 기존 feature에 fix만 추가해 다시 merge하면 원래 변경은 돌아오지 않습니다. 먼저 revert commit을 revert하거나 현재 main에서 전체 변경을 새 커밋으로 만드세요.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Squash merge</strong><br /><span class="badge">main이 간결함</span></td>
+                    <td>F1~F7 변경이 S1 커밋 하나로 합쳐져 main에 들어갑니다. merge 관계는 남지 않습니다.</td>
+                    <td><code>git revert &lt;squash_sha&gt;</code>로 일반 커밋 하나를 되돌립니다.</td>
+                    <td>main을 기능 단위로 읽고 싶고, 중간 커밋이 main에 남지 않아도 될 때. 같은 브랜치를 나중에 일반 merge하면 이미 합쳐진 것으로 자동 인식되지 않을 수 있습니다.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rebase + ff-only</strong><br /><span class="badge warn">범위 지정 필요</span></td>
+                    <td>main에 F1'~F7'이 일렬로 들어갑니다.</td>
+                    <td>연속된 선형 구간이라면 <code>git revert --no-commit &lt;first_sha&gt;^..&lt;last_sha&gt;</code>로 first부터 last까지의 역패치를 모은 뒤 검토하고 한 번 커밋합니다.</td>
+                    <td>작업 트리와 index가 깨끗하고, 되돌릴 연속 범위를 정확히 확인할 수 있을 때.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Rebase 없는 ff-only</strong><br /><span class="badge danger">현재 시나리오에서는 실패</span></td>
+                    <td>main과 feature가 이미 갈라졌으므로 <code>git merge --ff-only feature/login</code>은 병합을 거부합니다.</td>
+                    <td>먼저 feature를 최신 main 위에 rebase한 뒤 ff-only로 반영해야 일렬의 그래프가 됩니다.</td>
+                    <td>main이 feature의 조상이고 두 브랜치가 갈라지지 않았을 때만 바로 가능합니다.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section" id="commands">
+            <div class="section-title">
+              <h2>실전 명령어</h2>
+              <p>먼저 <code>git status</code>와 범위를 확인하세요. 이 페이지의 main은 저장소에 따라 master일 수 있습니다.</p>
+            </div>
+            <div class="command-grid">
+              <article class="command-card">
+                <h3>최신 main 위에서 다시 테스트</h3>
+                <p>혼자 쓰는 feature 브랜치일 때 사용하세요.</p>
+                <pre tabindex="0" aria-label="rebase 명령어 예시">git switch feature/login
+git fetch origin
+git rebase origin/main
+
+# 충돌 해결 후
+git status
+git add path/to/resolved-file
+git rebase --continue</pre>
+              </article>
+              <article class="command-card">
+                <h3>merge commit을 남겨 합치기</h3>
+                <p>기능 병합의 경계를 남기고 싶을 때.</p>
+                <pre tabindex="0" aria-label="merge commit과 revert 명령어 예시">git status --short
+git switch main
+git pull --ff-only
+git merge --no-ff feature/login -m "merge: feature/login"
+MERGE_SHA=$(git rev-parse HEAD)
+
+# 테스트 실패 시 부모 순서 확인 후
+git show --pretty=raw "$MERGE_SHA"
+git revert -m 1 "$MERGE_SHA"</pre>
+              </article>
+              <article class="command-card">
+                <h3>연속된 커밋을 한 revert로 묶기</h3>
+                <p>abc1234와 def5678을 실제 첫 SHA와 마지막 SHA로 바꾸세요.</p>
+                <pre tabindex="0" aria-label="연속된 커밋 범위 revert 명령어 예시">FIRST_SHA=abc1234
+LAST_SHA=def5678
+
+git status --short
+git log --reverse --oneline "${FIRST_SHA}^..${LAST_SHA}"
+git revert --no-commit "${FIRST_SHA}^..${LAST_SHA}"
+git diff --cached
+git commit -m "revert: feature/login"</pre>
+              </article>
+            </div>
+          </section>
+
+          <section class="section" id="tips">
+            <div class="section-title">
+              <h2>Git 초보자가 자주 헷갈리는 포인트</h2>
+              <p>아래 네 가지만 기억해도 merge와 rollback 판단이 훨씬 편해집니다.</p>
+            </div>
+            <div class="tip-grid">
+              <article class="tip">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 19h16"></path>
+                    <path d="M6 17V7"></path>
+                    <path d="M18 17V7"></path>
+                    <path d="M6 7h12"></path>
+                  </svg>
+                </span>
+                <div>
+                  <h3>먼저 그래프를 보세요</h3>
+                  <p><code>git log --oneline --graph --decorate --all</code>은 길을 잃었을 때 가장 빠른 지도입니다.</p>
+                </div>
+              </article>
+              <article class="tip">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M9 12 11 14 15 10"></path>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path>
+                  </svg>
+                </span>
+                <div>
+                  <h3>공유 브랜치 rebase는 조심하세요</h3>
+                  <p>이미 push했고 다른 사람이 가져갔다면 rebase보다 merge가 보통 안전합니다.</p>
+                </div>
+              </article>
+              <article class="tip">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 12h18"></path>
+                    <path d="m8 7-5 5 5 5"></path>
+                    <path d="m16 7 5 5-5 5"></path>
+                  </svg>
+                </span>
+                <div>
+                  <h3>공유된 main에서는 보통 revert가 낫습니다</h3>
+                  <p><code>reset</code> 후 force-push하는 것보다 협업 기록을 보존하기 쉽습니다. revert도 충돌할 수 있으므로 복구 브랜치에서 테스트한 뒤 PR로 반영하세요.</p>
+                </div>
+              </article>
+              <article class="tip">
+                <span class="icon">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3v18"></path>
+                    <path d="M5 8h14"></path>
+                    <path d="M7 16h10"></path>
+                  </svg>
+                </span>
+                <div>
+                  <h3>PR 버튼도 전략입니다</h3>
+                  <p>GitHub에서는 “Create a merge commit”이 <code>--no-ff</code>, “Squash and merge”가 squash 전략에 가깝습니다.</p>
+                </div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">복사했습니다</div>
+
+    <script>
+      const $ = (selector) => document.querySelector(selector);
+      const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+      const graph = $("#commit-graph");
+      const caption = $("#graph-caption");
+      const readout = $("#node-readout");
+      const compactMedia = window.matchMedia("(max-width: 779px)");
+      let currentMode = "before";
+
+      const inspector = {
+        label: $("#inspector-label"),
+        title: $("#inspector-title"),
+        copy: $("#inspector-copy"),
+        command: $("#inspector-command"),
+        good: $("#inspector-good"),
+        watch: $("#inspector-watch")
+      };
+
+      const modes = {
+        before: {
+          label: "현재 상태",
+          title: "feature에 7개 커밋이 쌓였습니다",
+          copy:
+            "feature/login은 C2에서 갈라졌고 F1부터 F7까지 작업했습니다. 그 사이 main에는 D1, D2가 추가됐습니다.",
+          command: `git log --oneline --graph --decorate --all
+
+# main: C0-C1-C2-D1-D2
+# feature/login: C0-C1-C2-F1-...-F7`,
+          good: "반영 방법을 고르기 전, 현재 그래프 모양을 확인할 때.",
+          watch: "main에 어떤 커밋을 남길지에 따라 나중에 되돌리는 방법이 달라집니다.",
+          caption:
+            "C2에서 feature가 갈라졌고, main은 D2까지 앞으로 갔습니다. feature에는 7개 커밋이 있습니다."
+        },
+        rebase: {
+          label: "Rebase",
+          title: "F1~F7의 변경을 최신 main 뒤에 다시 적용합니다",
+          copy:
+            "D2 뒤에 각 변경을 다시 적용한 F1'~F7'이 만들어집니다. 새 부모와 스냅샷을 가지므로 SHA가 바뀌며, 충돌 해결에 따라 결과가 달라질 수 있습니다.",
+          command: `git switch feature/login
+git fetch origin
+git rebase origin/main`,
+          good: "혼자 쓰는 feature를 최신 main 기준으로 정리하고 테스트할 때.",
+          watch: "이미 다른 사람이 가져간 브랜치에서는 rebase가 히스토리를 다시 써서 충돌을 만들 수 있습니다.",
+          caption:
+            "회색 F1~F7은 비교를 위한 이전 위치입니다. main은 D2를, feature/login은 새 F7'을 가리킵니다."
+        },
+        noff: {
+          label: "Merge commit",
+          title: "--no-ff merge는 feature 병합의 경계 M1을 남깁니다",
+          copy:
+            "F1~F7 기록은 보존되고 M1은 D2와 F7을 부모로 가집니다. -m 1로 D2를 mainline으로 선택하면 M1과 D2 사이의 차이를 반대로 적용합니다.",
+          command: `git status --short
+git switch main
+git pull --ff-only
+git merge --no-ff feature/login -m "merge: feature/login"
+MERGE_SHA=$(git rev-parse HEAD)
+
+# 테스트 실패 시 부모 순서 확인 후
+git show --pretty=raw "$MERGE_SHA"
+git revert -m 1 "$MERGE_SHA"`,
+          good: "커밋 기록을 보존하면서 기능 병합의 경계도 남기고 싶을 때.",
+          watch:
+            "merge revert 뒤 기존 feature에 fix만 추가해 재병합하면 원래 변경은 돌아오지 않습니다. 먼저 revert commit을 revert하거나 현재 main에서 전체 변경을 새 커밋으로 만드세요.",
+          caption:
+            "M1은 main의 D2와 feature의 F7을 부모로 갖고, main은 M1을 가리킵니다. merge 기록은 revert 뒤에도 남습니다."
+        },
+        squash: {
+          label: "Squash",
+          title: "squash merge는 7개 커밋의 변경을 S1 하나로 기록합니다",
+          copy:
+            "main에는 기능 단위 커밋 하나만 남습니다. merge 관계는 남지 않으며, 실패하면 S1을 일반 커밋처럼 revert하면 됩니다.",
+          command: `git switch main
+git pull --ff-only
+git merge --squash feature/login
+git commit -m "feat: login flow"
+SQUASH_SHA=$(git rev-parse HEAD)
+
+# 테스트 실패 시
+git revert "$SQUASH_SHA"`,
+          good: "main 히스토리를 기능 단위로 간결하게 유지하고 싶을 때.",
+          watch: "F1~F7의 세부 커밋은 main 히스토리에 직접 남지 않습니다. 같은 브랜치를 나중에 일반 merge하면 이미 합쳐진 것으로 자동 인식되지 않을 수 있습니다.",
+          caption:
+            "F1~F7의 변경이 S1 하나로 기록되고 main은 S1을 가리킵니다. 되돌릴 대상도 일반 커밋 S1 하나입니다."
+        },
+        ff: {
+          label: "Rebase + ff-only",
+          title: "rebase 후 ff-only는 선형이지만 범위 revert가 필요합니다",
+          copy:
+            "main이 F7'까지 이동해 그래프는 깔끔합니다. 대신 실패하면 되돌릴 커밋 범위를 직접 지정해야 합니다.",
+          command: `git status --short
+git switch main
+git pull --ff-only
+
+git switch feature/login
+git rebase main
+FIRST_SHA=$(git rev-list --reverse main..HEAD | sed -n '1p')
+LAST_SHA=$(git rev-parse HEAD)
+
+git switch main
+git merge --ff-only feature/login
+
+# 테스트 실패 시 범위를 먼저 확인
+git log --reverse --oneline "\${FIRST_SHA}^..\${LAST_SHA}"
+git revert --no-commit "\${FIRST_SHA}^..\${LAST_SHA}"
+git diff --cached
+git commit -m "revert: feature/login"`,
+          good: "선형 히스토리를 중요하게 보고, 되돌릴 범위를 정확히 관리할 수 있을 때.",
+          watch: "초보자에게는 범위 지정이 헷갈릴 수 있습니다. 기능 단위 rollback이 중요하면 --no-ff나 squash가 더 쉽습니다.",
+          caption:
+            "회색 F1~F7은 rebase 전 자리입니다. main과 feature/login이 F7'을 가리키며, merge commit이 없어 되돌릴 연속 범위를 직접 확인해야 합니다."
+        },
+        revert: {
+          label: "Merge revert",
+          title: "merge commit을 revert하면 되돌리는 새 커밋 R1이 생깁니다",
+          copy:
+            "M1이나 ancestry를 삭제하지 않고, M1과 선택한 mainline 부모 사이의 차이를 반대로 적용한 R1을 새로 만듭니다. 이후 변경과 충돌할 수 있습니다.",
+          command: `git fetch origin
+git switch -c revert/feature-login origin/main
+MERGE_SHA=abc1234
+
+git show --pretty=raw "$MERGE_SHA"
+git revert -m 1 "$MERGE_SHA"
+
+# 충돌 시 해결한 파일만 추가한 뒤 계속
+# git add path/to/resolved-file
+# git revert --continue
+# 취소하려면: git revert --abort
+# 테스트를 통과시킨 뒤 이 브랜치로 PR`,
+          good: "이미 main에 반영된 변경을 공유 히스토리를 다시 쓰지 않고 되돌릴 때.",
+          watch: "abc1234는 실제 merge SHA로 바꾸세요. squash commit은 merge가 아니므로 -m 1 없이 일반 revert를 사용합니다.",
+          caption:
+            "main은 새 R1을 가리킵니다. M1과 부모 관계는 남고, 선택한 mainline과 M1 사이의 차이를 되돌린 기록이 추가됩니다."
+        }
+      };
+
+      const base = [
+        { id: "C0", x: 80, y: 132, cls: "main-node", note: "처음 기준이 되는 커밋" },
+        { id: "C1", x: 165, y: 132, cls: "main-node", note: "main의 이전 커밋" },
+        { id: "C2", x: 250, y: 132, cls: "main-node", note: "feature가 갈라진 지점" }
+      ];
+
+      const mainAdvance = [
+        { id: "D1", x: 360, y: 132, cls: "main-node", note: "다른 작업이 main에 추가됨" },
+        { id: "D2", x: 470, y: 132, cls: "main-node", note: "현재 main의 끝" }
+      ];
+
+      const feature = Array.from({ length: 7 }, (_, index) => ({
+        id: `F${index + 1}`,
+        x: 340 + index * 70,
+        y: 265,
+        cls: "feature-node",
+        note: `feature/login의 ${index + 1}번째 커밋`
+      }));
+
+      const rebased = Array.from({ length: 7 }, (_, index) => ({
+        id: `F${index + 1}'`,
+        x: 535 + index * 48,
+        y: 132,
+        cls: "new-node",
+        note: `rebase 후 새로 만들어진 ${index + 1}번째 커밋`
+      }));
+
+      function svgEl(name, attrs = {}) {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", name);
+        Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+        return el;
+      }
+
+      function addPath(d, cls = "lane") {
+        graph.append(svgEl("path", { d, class: cls }));
+      }
+
+      function addLabel(text, x, y) {
+        const label = svgEl("text", { x, y, class: "graph-label" });
+        label.textContent = text;
+        graph.append(label);
+      }
+
+      function addBubble(text, x, y, width) {
+        const group = svgEl("g");
+        group.append(svgEl("rect", { x, y, width, height: 28, rx: 7, class: "bubble" }));
+        const label = svgEl("text", { x: x + 10, y: y + 18, class: "bubble-text" });
+        label.textContent = text;
+        group.append(label);
+        graph.append(group);
+      }
+
+      function addLine(points, cls = "lane") {
+        const [first, ...rest] = points;
+        const d = rest.reduce((acc, point) => `${acc} L ${point.x} ${point.y}`, `M ${first.x} ${first.y}`);
+        addPath(d, cls);
+      }
+
+      function addNode({ id, x, y, cls, note, radius = 21 }, extraClass = "") {
+        const interactive = !extraClass.split(" ").includes("ghost-node");
+        const attrs = {
+          class: `commit ${cls} ${extraClass}`.trim(),
+          "data-node-id": id
+        };
+        if (interactive) {
+          attrs.role = "button";
+          attrs.tabindex = "0";
+          attrs["aria-label"] = `${id}: ${note}`;
+        } else {
+          attrs["aria-hidden"] = "true";
+        }
+        const group = svgEl("g", attrs);
+        group.append(svgEl("circle", { cx: x, cy: y, r: radius }));
+        const text = svgEl("text", { x, y });
+        text.textContent = id.replace("'", "′");
+        group.append(text);
+        const update = () => {
+          readout.textContent = `${id}: ${note}`;
+        };
+        if (interactive) {
+          group.addEventListener("click", update);
+          group.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              update();
+            }
+          });
+        }
+        graph.append(group);
+      }
+
+      function bringNodesToFront(items) {
+        items.forEach((item) => {
+          const id = typeof item === "string" ? item : item.id;
+          const node = Array.from(graph.querySelectorAll("[data-node-id]")).find(
+            (candidate) => candidate.dataset.nodeId === id
+          );
+          if (node) graph.append(node);
+        });
+      }
+
+      function renderCompactGraph(mode) {
+        graph.setAttribute("viewBox", "0 0 520 340");
+        graph.classList.add("compact");
+        readout.textContent = "커밋 노드를 누르면 설명이 바뀝니다.";
+
+        const compactBase = [
+          { id: "C0", x: 44, y: 110, cls: "main-node", note: "처음 기준이 되는 커밋", radius: 17 },
+          { id: "C1", x: 98, y: 110, cls: "main-node", note: "main의 이전 커밋", radius: 17 },
+          { id: "C2", x: 152, y: 110, cls: "main-node", note: "feature가 갈라진 지점", radius: 17 }
+        ];
+        const compactMain = [
+          { id: "D1", x: 212, y: 110, cls: "main-node", note: "다른 작업이 main에 추가됨", radius: 17 },
+          { id: "D2", x: 272, y: 110, cls: "main-node", note: "현재 main의 끝", radius: 17 }
+        ];
+        const compactFeature = Array.from({ length: 7 }, (_, index) => ({
+          id: `F${index + 1}`,
+          x: 190 + index * 38,
+          y: 242,
+          cls: "feature-node",
+          note: `feature/login의 ${index + 1}번째 커밋`,
+          radius: 17
+        }));
+        const compactRebased = Array.from({ length: 7 }, (_, index) => ({
+          id: `F${index + 1}'`,
+          x: 310 + index * 32,
+          y: 110,
+          cls: "new-node",
+          note: `rebase 후 새로 만들어진 ${index + 1}번째 커밋`,
+          radius: 15
+        }));
+        const showPreviousFeature = mode === "rebase" || mode === "ff";
+
+        addLabel("main", 34, 74);
+        addLabel(showPreviousFeature ? "rebase 전 위치" : "feature/login", 34, 294);
+        addLine([...compactBase, ...compactMain], "lane");
+        addLine(
+          [{ x: 152, y: 110 }, { x: 176, y: 178 }, ...compactFeature],
+          showPreviousFeature ? "lane ghost" : "lane feature"
+        );
+        [...compactBase, ...compactMain].forEach((item) => addNode(item));
+        compactFeature.forEach((item) => addNode(item, showPreviousFeature ? "ghost-node" : ""));
+
+        if (mode === "before") {
+          addBubble("main", 242, 64, 58);
+          addBubble("feature/login", 330, 278, 112);
+        }
+
+        if (mode === "rebase") {
+          addLine([{ x: 272, y: 110 }, ...compactRebased], "lane rebased");
+          bringNodesToFront([...compactBase, ...compactMain, ...compactFeature]);
+          compactRebased.forEach((item) => addNode(item));
+          addBubble("main", 242, 64, 58);
+          addBubble("feature/login", 392, 64, 112);
+        }
+
+        if (mode === "noff" || mode === "revert") {
+          const merge = { id: "M1", x: 450, y: 110, cls: "merge-node", note: "feature 병합의 기준이 되는 merge commit", radius: 17 };
+          addPath("M 272 110 L 450 110", "lane");
+          addPath("M 418 242 C 448 214 464 154 450 110", "lane feature");
+          bringNodesToFront([...compactBase, ...compactMain, ...compactFeature]);
+          addNode(merge);
+          addBubble("feature/login", 330, 278, 112);
+          addBubble("main", mode === "revert" ? 448 : 420, 64, 58);
+        }
+
+        if (mode === "squash") {
+          const squash = { id: "S1", x: 450, y: 110, cls: "squash-node", note: "F1~F7 변경을 합친 squash commit", radius: 17 };
+          addPath("M 272 110 L 450 110", "lane");
+          bringNodesToFront([...compactBase, ...compactMain, ...compactFeature]);
+          addNode(squash);
+          addBubble("feature/login", 330, 278, 112);
+          addBubble("main", 420, 64, 58);
+        }
+
+        if (mode === "ff") {
+          addLine([{ x: 272, y: 110 }, ...compactRebased], "lane rebased");
+          bringNodesToFront([...compactBase, ...compactMain, ...compactFeature]);
+          compactRebased.forEach((item) => addNode(item));
+          addBubble("main + feature", 386, 64, 118);
+        }
+
+        if (mode === "revert") {
+          const revert = { id: "R1", x: 496, y: 110, cls: "revert-node", note: "M1의 변경을 되돌리는 새 커밋", radius: 17 };
+          addPath("M 450 110 L 496 110", "lane revert");
+          bringNodesToFront(["M1"]);
+          addNode(revert);
+          addBubble("revert", 350, 162, 76);
+        }
+      }
+
+      function renderGraph(mode) {
+        graph.replaceChildren();
+        if (compactMedia.matches) {
+          renderCompactGraph(mode);
+          return;
+        }
+        graph.classList.remove("compact");
+        graph.setAttribute("viewBox", "0 0 900 430");
+        readout.textContent = "커밋 노드를 누르면 설명이 바뀝니다.";
+        const showPreviousFeature = mode === "rebase" || mode === "ff";
+
+        addLabel("main", 56, 92);
+        addLabel(showPreviousFeature ? "rebase 전 위치" : "feature/login", 56, 306);
+        addLine([...base, ...mainAdvance], "lane");
+        addLine(
+          [{ x: 250, y: 132 }, { x: 300, y: 205 }, ...feature],
+          showPreviousFeature ? "lane ghost" : "lane feature"
+        );
+        [...base, ...mainAdvance].forEach((item) => addNode(item));
+        feature.forEach((item) => addNode(item, showPreviousFeature ? "ghost-node" : ""));
+
+        if (mode === "before") {
+          addBubble("main", 444, 82, 58);
+          addBubble("feature/login", 738, 190, 112);
+          addBubble("7 commits on feature", 568, 316, 174);
+        }
+
+        if (mode === "rebase") {
+          addLine([{ x: 470, y: 132 }, ...rebased], "lane rebased");
+          bringNodesToFront([...base, ...mainAdvance, ...feature]);
+          rebased.forEach((item) => addNode(item));
+          addBubble("main", 444, 82, 58);
+          addBubble("feature/login", 738, 176, 112);
+        }
+
+        if (mode === "noff" || mode === "revert") {
+          const merge = { id: "M1", x: 790, y: 132, cls: "merge-node", note: "feature 병합의 경계가 되는 merge commit" };
+          addPath("M 470 132 L 790 132", "lane");
+          addPath("M 760 265 C 800 238 812 184 790 132", "lane feature");
+          bringNodesToFront([...base, ...mainAdvance, ...feature]);
+          addNode(merge);
+          addBubble("feature/login", 738, mode === "revert" ? 300 : 190, 112);
+          addBubble("main", mode === "revert" ? 832 : 760, 82, 58);
+        }
+
+        if (mode === "squash") {
+          const squash = { id: "S1", x: 790, y: 132, cls: "squash-node", note: "F1~F7 변경을 합친 squash commit" };
+          addPath("M 470 132 L 790 132", "lane");
+          bringNodesToFront([...base, ...mainAdvance, ...feature]);
+          addNode(squash);
+          addPath("M 340 315 L 760 315", "lane ghost");
+          addBubble("feature/login", 738, 300, 112);
+          addBubble("main", 760, 82, 58);
+          addBubble("F1~F7 -> S1", 640, 176, 128);
+        }
+
+        if (mode === "ff") {
+          addLine([{ x: 470, y: 132 }, ...rebased], "lane rebased");
+          bringNodesToFront([...base, ...mainAdvance, ...feature]);
+          rebased.forEach((item) => addNode(item));
+          addBubble("main + feature", 716, 82, 134);
+        }
+
+        if (mode === "revert") {
+          const revert = { id: "R1", x: 865, y: 132, cls: "revert-node", note: "M1의 변경을 되돌리는 새 커밋" };
+          addPath("M 790 132 L 865 132", "lane revert");
+          bringNodesToFront(["M1"]);
+          addNode(revert);
+          addBubble("git revert -m 1 M1", 616, 176, 180);
+        }
+      }
+
+      function setMode(mode, { syncUrl = true } = {}) {
+        const data = modes[mode];
+        currentMode = mode;
+        $$(".tab-button").forEach((button) => {
+          const selected = button.dataset.mode === mode;
+          button.classList.toggle("active", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+        inspector.label.textContent = data.label;
+        inspector.title.textContent = data.title;
+        inspector.copy.textContent = data.copy;
+        inspector.command.textContent = data.command;
+        inspector.good.textContent = data.good;
+        inspector.watch.textContent = data.watch;
+        caption.textContent = data.caption;
+        renderGraph(mode);
+        syncGraphScroll(mode);
+        if (syncUrl) syncUrlState();
+      }
+
+      function syncGraphScroll(mode = currentMode) {
+        const graphScroll = $(".graph-scroll");
+        if (graphScroll) {
+          const targetScroll = () =>
+            compactMedia.matches && mode !== "before"
+              ? graphScroll.scrollWidth - graphScroll.clientWidth
+              : 0;
+          const applyScroll = () => {
+            graphScroll.scrollLeft = targetScroll();
+          };
+          applyScroll();
+          window.requestAnimationFrame(applyScroll);
+          window.setTimeout(applyScroll, 120);
+        }
+      }
+
+      function showToast(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showToast.timer);
+        showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 1700);
+      }
+
+      async function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            const copied = await Promise.race([
+              navigator.clipboard.writeText(text).then(() => true),
+              new Promise((resolve) => window.setTimeout(() => resolve(false), 700))
+            ]);
+            if (copied) return true;
+          } catch {
+            // Some embedded browsers block clipboard writes. Fall back below.
+          }
+        }
+
+        const previousFocus = document.activeElement;
+        const area = document.createElement("textarea");
+        let copied = false;
+        try {
+          area.value = text;
+          area.setAttribute("readonly", "");
+          area.style.position = "fixed";
+          area.style.left = "-9999px";
+          area.style.top = "0";
+          document.body.append(area);
+          area.focus();
+          area.select();
+          area.setSelectionRange(0, text.length);
+          copied = typeof document.execCommand === "function" && document.execCommand("copy");
+        } catch {
+          copied = false;
+        } finally {
+          area.remove();
+          if (previousFocus instanceof HTMLElement) previousFocus.focus();
+        }
+        return copied;
+      }
+
+      function selectText(node) {
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      $$(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          setMode(button.dataset.mode);
+        });
+      });
+
+      $$("[data-copy]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          const target = $(button.dataset.copy);
+          if (!target) return;
+          const text = target?.textContent?.trim() ?? "";
+          if (await copyText(text)) {
+            showToast("명령어를 복사했습니다");
+          } else {
+            selectText(target);
+            showToast("명령어를 선택했습니다. Cmd+C 또는 Ctrl+C로 복사하세요");
+          }
+        });
+      });
+
+      function syncUrlState() {
+        const url = new URL(window.location.href);
+        if (currentMode === "before") {
+          url.searchParams.delete("mode");
+        } else {
+          url.searchParams.set("mode", currentMode);
+        }
+        window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      }
+
+      const sectionLinks = $$(".side-nav a[href^='#']");
+      const setActiveSection = (id) => {
+        sectionLinks.forEach((link) => {
+          const active = link.getAttribute("href") === `#${id}`;
+          link.classList.toggle("active", active);
+          if (active) {
+            link.setAttribute("aria-current", "location");
+          } else {
+            link.removeAttribute("aria-current");
+          }
+        });
+      };
+      sectionLinks.forEach((link) => {
+        link.addEventListener("click", () => setActiveSection(link.getAttribute("href").slice(1)));
+      });
+      if ("IntersectionObserver" in window) {
+        const sectionObserver = new IntersectionObserver(
+          (entries) => {
+            const visible = entries
+              .filter((entry) => entry.isIntersecting)
+              .sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
+            if (visible[0]) setActiveSection(visible[0].target.id);
+          },
+          { rootMargin: "-24% 0px -64% 0px", threshold: 0 }
+        );
+        sectionLinks.forEach((link) => {
+          const section = $(link.getAttribute("href"));
+          if (section) sectionObserver.observe(section);
+        });
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const initialMode = modes[params.get("mode")] ? params.get("mode") : "before";
+      setMode(initialMode, { syncUrl: false });
+
+      const rerenderForViewport = () => {
+        const activeNodeId = graph.contains(document.activeElement)
+          ? document.activeElement.dataset.nodeId
+          : null;
+        renderGraph(currentMode);
+        syncGraphScroll();
+        if (activeNodeId) {
+          const nextNode = Array.from(graph.querySelectorAll("[data-node-id]")).find(
+            (node) => node.dataset.nodeId === activeNodeId && node.hasAttribute("tabindex")
+          );
+          if (nextNode instanceof SVGElement) nextNode.focus();
+        }
+      };
+      if (compactMedia.addEventListener) {
+        compactMedia.addEventListener("change", rerenderForViewport);
+      } else {
+        compactMedia.addListener(rerenderForViewport);
+      }
+    </script>
+  </body>
+</html>

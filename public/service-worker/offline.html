@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#183e8e" />
+    <title>오프라인 · 쓸모지도</title>
+    <style>
+      :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif; }
+      * { box-sizing: border-box; }
+      body { display: grid; place-items: center; min-height: 100vh; margin: 0; background: #f4f5f1; color: #13211f; padding: 24px; }
+      main { width: min(620px, 100%); border-block: 1px solid #b9c7c2; padding: 52px 0; }
+      small { color: #2c65d8; font-family: ui-monospace, monospace; font-weight: 800; letter-spacing: .12em; }
+      h1 { margin: 18px 0; font-size: clamp(44px, 10vw, 76px); letter-spacing: -.07em; line-height: 1; }
+      p { max-width: 520px; color: #52625e; line-height: 1.8; }
+      a { display: inline-flex; margin-top: 18px; border-bottom: 1px solid currentColor; padding-bottom: 7px; color: #183e8e; font-weight: 750; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <small>OFFLINE FALLBACK</small>
+      <h1>연결은 끊겼지만,<br />앱 셸은 남아 있습니다.</h1>
+      <p>서비스 워커가 네트워크 탐색 실패를 감지하고 미리 저장해 둔 이 화면을 돌려줬습니다. 연결이 돌아오면 실험실로 다시 이동하세요.</p>
+      <a href="/service-worker/">Service Worker Lab 다시 열기 →</a>
+    </main>
+  </body>
+</html>
