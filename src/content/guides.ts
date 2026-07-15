@@ -21,7 +21,7 @@ export const guides: Guide[] = [
     summary:
       "같은 7개 커밋이 rebase, merge, squash, revert 선택에 따라 어떻게 달라지는지 직접 비교합니다.",
     why: "명령어를 외우기 전에 그래프의 모양과 되돌릴 경계를 이해하기 위해",
-    format: "6개 상태를 바꾸는 인터랙티브 커밋 그래프",
+    format: "7개 상태를 바꾸는 인터랙티브 커밋 그래프",
     readingTime: "약 8분",
     tags: ["Git", "Rebase", "Rollback"],
     accent: "teal",
